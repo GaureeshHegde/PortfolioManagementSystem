@@ -1,4 +1,5 @@
 import Navbar from './components/Navbar'; // Adjust the path if needed
+import './globals.css';
 
 export default function Layout({ children }) {
     return (

@@ -27,7 +27,7 @@ const Navbar = () => {
             <div className="navbar-end">
                 <Link href="/login" className="btn">Login</Link>
                 <Link href="/register" className="btn">Signup</Link>
-                <div className="pt-32 text-red-500">Hi</div>
+                <div className="pt-32 text-red-500"></div>
             </div>
         </div>
     );
