@@ -2,35 +2,27 @@ import Link from 'next/link';
 
 const Navbar = () => {
     return (
-        // <nav className="navbar bg-base-100 shadow-lg">
-        //     <div className="flex-1">
-        //         <a className="text-xl font-bold text-primary">Your Logo</a>
-        //     </div>
-        //     <div className="flex-none">
-        //         <ul className="menu menu-horizontal px-1">
-        //             <li>
-        //                 <Link href="/" className="btn btn-ghost text-primary">Home</Link>
-        //             </li>
-        //             <li>
-        //                 <Link href="/login" className="btn btn-ghost text-primary">Login</Link>
-        //             </li>
-        //             <li>
-        //                 <Link href="/register" className="btn btn-ghost text-primary">Sign Up</Link>
-        //             </li>
-        //         </ul>
-        //     </div>
-        // </nav>
-        <div className="navbar bg-base-100">
-            <div className="navbar-start">
-                <Link href="/" className="btn btn-ghost text-xl">Logo</Link>
+        <nav className="bg-blue-500 p-6">
+            <div className="flex justify-between items-center">
+                <div className="text-white text-lg">Your Logo</div>
+                <div>
+                    <Link href="/" className="text-white px-4">Home</Link>
+                    <Link href="/watchlist" className="text-white px-4">Watchlist</Link>
+                    <Link href="/holdings" className="text-white px-4">Holdings</Link>
+                    <Link href="/order" className="text-white px-4">Orders</Link>
+                    <Link href="/funds" className="text-white px-4">Funds</Link>
+                    <div className="relative group inline-block">
+                        <div className="text-white px-4">Username</div>
+                        <div className="absolute hidden group-hover:block bg-gray-800 text-white right-0 mt-2 rounded-lg shadow-lg">
+                            <Link href="/about-us" className="block px-4 py-2">About Us</Link>
+                            <Link href="/support" className="block px-4 py-2">Customer Support</Link>
+                            <Link href="/logout" className="block px-4 py-2">Logout</Link>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div className="navbar-end">
-                <Link href="/login" className="btn">Login</Link>
-                <Link href="/register" className="btn">Signup</Link>
-                <div className="pt-32 text-red-500"></div>
-            </div>
-        </div>
+        </nav>
     );
-};
+};  
 
 export default Navbar;
