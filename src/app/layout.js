@@ -6,11 +6,10 @@ import { Toaster } from 'react-hot-toast'; // Import Toaster
 export default function Layout({ children }) {
     return (
         <html lang="en">
-            <body className="bg-blue-400 text-white">
-                <Navbar />
-                <Toaster />
-                {children}
-                <Footer />
+            <body className="bg-gradient-to-r from-blue-500 to-cyan-500">
+            <Navbar />
+            {children}
+            <Footer />
             </body>
         </html>
     );
