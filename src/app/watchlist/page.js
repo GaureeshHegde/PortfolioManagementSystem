@@ -1,67 +1,156 @@
-'use client';
-import React, { useState } from 'react';
+"use client";
 
-const WatchlistPage = () => {
-  const [watchlist, setWatchlist] = useState([
-    { name: 'AAPL', id: 1 },
-    { name: 'GOOGL', id: 2 },
-    { name: 'TSLA', id: 3 },
-  ]);
+import { useState } from "react"
+import { ArrowDownIcon, ArrowUpIcon, PlusIcon, Trash2Icon } from "lucide-react"
+import { toast } from 'react-hot-toast';
 
-  const [newStock, setNewStock] = useState('');
+// Mock data for demonstration
+const mockStocks = [
+  { symbol: "AAPL", name: "Apple Inc.", price: 150.25, change: 2.5 },
+  { symbol: "GOOGL", name: "Alphabet Inc.", price: 2750.80, change: -0.8 },
+  { symbol: "MSFT", name: "Microsoft Corporation", price: 305.50, change: 1.2 },
+  { symbol: "AMZN", name: "Amazon.com, Inc.", price: 3380.75, change: -1.5 },
+  { symbol: "FB", name: "Meta Platforms, Inc.", price: 325.30, change: 0.5 },
+]
 
-  const addStock = () => {
-    if (newStock) {
-      setWatchlist([...watchlist, { name: newStock, id: watchlist.length + 1 }]);
-      setNewStock('');
+// Mock function to simulate stock search
+const searchStocks = (query) => {
+  return mockStocks.filter(stock => 
+    stock.symbol.toLowerCase().includes(query.toLowerCase()) || 
+    stock.name.toLowerCase().includes(query.toLowerCase())
+  )
+}
+
+export default function WatchlistPage() {
+  const [watchlist, setWatchlist] = useState([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState([])
+
+  const handleSearch = () => {
+    const results = searchStocks(searchQuery)
+    setSearchResults(results)
+  }
+
+  const addToWatchlist = (stock) => {
+    if (!watchlist.some(item => item.symbol === stock.symbol)) {
+      setWatchlist([...watchlist, stock]);
+      toast.success(`${stock.symbol} has been added to your watchlist.`); // Ensure this is a string
+    } else {
+      toast.error(`${stock.symbol} is already in your watchlist.`); // Ensure this is a string
     }
   };
 
-  const removeStock = (id) => {
-    setWatchlist(watchlist.filter((stock) => stock.id !== id));
-  };
+
+  const removeFromWatchlist = (symbol) => {
+  setWatchlist(watchlist.filter(stock => stock.symbol !== symbol));
+  toast.success("Removed from Watchlist", {
+    description: `${symbol} has been removed from your watchlist.`,
+  });
+};
+
 
   return (
-    <div className="min-h-screen bg-base-200 flex flex-col items-center py-10">
-      <div className="max-w-xl w-full bg-neutral p-8 rounded-lg shadow-xl">
-        <h1 className="text-4xl font-bold text-primary-content mb-6 text-center">My Watchlist</h1>
-
-        {/* Add Stock */}
-        <div className="mb-6 flex items-center space-x-4">
-          <input
-            type="text"
-            value={newStock}
-            onChange={(e) => setNewStock(e.target.value)}
-            placeholder="Add a stock (e.g., AAPL)"
-            className="input input-bordered input-primary w-full bg-base-300 text-primary-content"
-          />
-          <button onClick={addStock} className="btn btn-primary">
-            Add Stock
-          </button>
-        </div>
-
-        {/* Watchlist */}
-        <div className="space-y-4">
-          {watchlist.map((stock) => (
-            <div
-              key={stock.id}
-              className="bg-base-100 p-4 rounded-lg shadow-md flex justify-between items-center"
-            >
-              <span className="text-neutral-content text-lg font-semibold">
-                {stock.name}
-              </span>
-              <button
-                onClick={() => removeStock(stock.id)}
-                className="btn btn-sm btn-outline btn-error"
-              >
-                Remove
-              </button>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6">Your Watchlist</h1>
+      
+      <div className="card shadow-lg mb-6">
+        <div className="card-body">
+          <h2 className="card-title">Search Stocks</h2>
+          <div className="flex gap-2">
+            <input 
+              type="text" 
+              placeholder="Search by symbol or name"
+              className="input input-bordered w-full"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            <button className="btn btn-primary" onClick={handleSearch}>
+              Search
+            </button>
+          </div>
+          {searchResults.length > 0 && (
+            <div className="overflow-x-auto mt-4">
+              <table className="table w-full">
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Name</th>
+                    <th className="text-right">Price</th>
+                    <th className="text-right">Change</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {searchResults.map((stock) => (
+                    <tr key={stock.symbol}>
+                      <td>{stock.symbol}</td>
+                      <td>{stock.name}</td>
+                      <td className="text-right">${stock.price.toFixed(2)}</td>
+                      <td className="text-right">
+                        <span className={stock.change >= 0 ? "text-green-600" : "text-red-600"}>
+                          {stock.change >= 0 ? <ArrowUpIcon className="inline h-4 w-4" /> : <ArrowDownIcon className="inline h-4 w-4" />}
+                          {Math.abs(stock.change)}%
+                        </span>
+                      </td>
+                      <td>
+                        <button className="btn btn-outline btn-sm" onClick={() => addToWatchlist(stock)}>
+                          <PlusIcon className="h-4 w-4 mr-2" />
+                          Add
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ))}
+          )}
+        </div>
+      </div>
+
+      <div className="card shadow-lg">
+        <div className="card-body">
+          <h2 className="card-title">Your Watchlist</h2>
+          {watchlist.length === 0 ? (
+            <p className="text-center text-muted">Your watchlist is empty. Search for stocks to add them.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="table w-full">
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Name</th>
+                    <th className="text-right">Price</th>
+                    <th className="text-right">Change</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {watchlist.map((stock) => (
+                    <tr key={stock.symbol}>
+                      <td>{stock.symbol}</td>
+                      <td>{stock.name}</td>
+                      <td className="text-right">${stock.price.toFixed(2)}</td>
+                      <td className="text-right">
+                        <span className={stock.change >= 0 ? "text-green-600" : "text-red-600"}>
+                          {stock.change >= 0 ? <ArrowUpIcon className="inline h-4 w-4" /> : <ArrowDownIcon className="inline h-4 w-4" />}
+                          {Math.abs(stock.change)}%
+                        </span>
+                      </td>
+                      <td>
+                        <button className="btn btn-outline btn-sm" onClick={() => removeFromWatchlist(stock.symbol)}>
+                          <Trash2Icon className="h-4 w-4 mr-2" />
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>
-  );
-};
-
-export default WatchlistPage;
+  )
+}

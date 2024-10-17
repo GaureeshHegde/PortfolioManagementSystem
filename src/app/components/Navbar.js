@@ -3,14 +3,14 @@ import Link from 'next/link';
 const Navbar = () => {
 
     return (
-        <nav className="bg-blue-500 p-6">
+        <nav className="bg-black p-6">
             <div className="flex justify-between items-center">
                 <div className="text-white text-lg">Your Logo</div>
                 <div>
                     <Link href="/" className="text-white px-4">Home</Link>
                     <Link href="/watchlist" className="text-white px-4">Watchlist</Link>
                     <Link href="/holdings" className="text-white px-4">Holdings</Link>
-                    <Link href="/order" className="text-white px-4">Orders</Link>
+                    <Link href="/orders" className="text-white px-4">Orders</Link>
                     <Link href="/funds" className="text-white px-4">Funds</Link>
                     <div className="relative group inline-block">
                         <div className="text-white px-4">Username</div>
