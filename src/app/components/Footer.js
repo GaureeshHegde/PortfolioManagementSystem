@@ -18,7 +18,7 @@ const Footer = () => {
           </Link>
         </div>
         <div className="mt-4">
-          <Link href="/faq" className="text-sm text-gray-400 hover:text-white">
+          <Link href="/faqs" className="text-sm text-gray-400 hover:text-white">
             FAQ's
           </Link>
         </div>
