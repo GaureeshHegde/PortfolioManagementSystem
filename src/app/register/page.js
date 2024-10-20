@@ -42,7 +42,7 @@ const RegisterPage = () => {
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2 text-sm" htmlFor="confirm-password">Confirm Password</label>
+              <label className="block mb-2 text-sm text-white" htmlFor="confirm-password">Confirm Password</label>
               <input
                 type="password"
                 id="confirm-password"

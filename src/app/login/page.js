@@ -183,14 +183,14 @@ const LoginPage = () => {
             <p className="mt-6 text-center">
               {isCreatingAccount ? (
                 <>
-                  Already have an account?{" "}
+                  <span className="text-white">Already have an account? </span>
                   <button onClick={() => setIsCreatingAccount(false)} className="link link-primary">
                     Log In
                   </button>
                 </>
               ) : (
                 <>
-                  Don't have an account?{" "}
+                  <span className="text-white">Don't have an account? </span>
                   <button onClick={() => setIsCreatingAccount(true)} className="link link-primary">
                     Sign Up
                   </button>

@@ -1,53 +1,77 @@
 "use client";
 
-import { useState } from "react"
-import { ArrowDownIcon, ArrowUpIcon, PlusIcon, Trash2Icon } from "lucide-react"
+import { useState } from "react";
+import { ArrowDownIcon, ArrowUpIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { toast } from 'react-hot-toast';
 
-// Mock data for demonstration
-const mockStocks = [
-  { symbol: "AAPL", name: "Apple Inc.", price: 150.25, change: 2.5 },
-  { symbol: "GOOGL", name: "Alphabet Inc.", price: 2750.80, change: -0.8 },
-  { symbol: "MSFT", name: "Microsoft Corporation", price: 305.50, change: 1.2 },
-  { symbol: "AMZN", name: "Amazon.com, Inc.", price: 3380.75, change: -1.5 },
-  { symbol: "FB", name: "Meta Platforms, Inc.", price: 325.30, change: 0.5 },
-]
-
-// Mock function to simulate stock search
-const searchStocks = (query) => {
-  return mockStocks.filter(stock => 
-    stock.symbol.toLowerCase().includes(query.toLowerCase()) || 
-    stock.name.toLowerCase().includes(query.toLowerCase())
-  )
-}
-
 export default function WatchlistPage() {
-  const [watchlist, setWatchlist] = useState([])
-  const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState([])
+  const [watchlist, setWatchlist] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
 
-  const handleSearch = () => {
-    const results = searchStocks(searchQuery)
-    setSearchResults(results)
-  }
+  const handleSearch = async () => {
+    if (!searchQuery) return;
 
-  const addToWatchlist = (stock) => {
-    if (!watchlist.some(item => item.symbol === stock.symbol)) {
+    try {
+        const response = await fetch(`/api/stocks?symbol=${searchQuery}`);
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to fetch stock data."); // More informative error handling
+        }
+
+        const data = await response.json();
+        setSearchResults(data);
+    } catch (error) {
+        console.error("Error fetching stock data:", error);
+        toast.error(error.message); // Display the error message in a toast
+    }
+};
+
+  
+
+  const addToWatchlist = async (stock) => {
+    if (watchlist.some(item => item.symbol === stock.symbol)) {
+      toast.error(`${stock.symbol} is already in your watchlist.`);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/watchlist/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: 1, stockSymbol: stock.symbol, stockName: stock.name }) // Replace userId with the actual user ID
+      });
+
+      if (!response.ok) throw new Error("Failed to add stock to watchlist.");
       setWatchlist([...watchlist, stock]);
-      toast.success(`${stock.symbol} has been added to your watchlist.`); // Ensure this is a string
-    } else {
-      toast.error(`${stock.symbol} is already in your watchlist.`); // Ensure this is a string
+      toast.success(`${stock.symbol} has been added to your watchlist.`);
+    } catch (error) {
+      toast.error(error.message);
     }
   };
 
+  const removeFromWatchlist = async (symbol) => {
+    try {
+      const response = await fetch('/api/watchlist/remove', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: 1, stockSymbol: symbol }) // Replace userId with the actual user ID
+      });
 
-  const removeFromWatchlist = (symbol) => {
-  setWatchlist(watchlist.filter(stock => stock.symbol !== symbol));
-  toast.success("Removed from Watchlist", {
-    description: `${symbol} has been removed from your watchlist.`,
-  });
-};
-
+      if (!response.ok) throw new Error("Failed to remove stock from watchlist.");
+      setWatchlist(watchlist.filter(stock => stock.symbol !== symbol));
+      toast.success("Removed from Watchlist", {
+        description: `${symbol} has been removed from your watchlist.`,
+      });
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -152,5 +176,5 @@ export default function WatchlistPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
