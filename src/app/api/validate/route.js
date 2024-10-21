@@ -20,7 +20,7 @@ export async function POST(req) {
             return NextResponse.json({ success: false, message: "Invalid Token", message_code: 0 });
         }
 
-        return NextResponse.json({ success: true, message: "Success", message_code: 2 });
+        return NextResponse.json({ success: true, message: "Success", message_code: 2, id: res.rows[0].user_id });
 
     } catch (err) {
         if (err.name === "JsonWebTokenError") {

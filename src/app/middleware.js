@@ -2,13 +2,15 @@ import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
 export function middleware(req) {
-    const token = req.cookies.get('token'); // Or get it from the headers
+    // Get the token from the Authorization header
+    const token = req.headers.get('Authorization')?.split(' ')[1]; // "Bearer <token>"
 
     if (!token) {
         return NextResponse.redirect(new URL('/login', req.url));
     }
 
     try {
+        // Verify the token
         jwt.verify(token, process.env.JWT_SECRET);
         return NextResponse.next();
     } catch (error) {
@@ -17,5 +19,5 @@ export function middleware(req) {
 }
 
 export const config = {
-    matcher: ['/watchlist', '/holdings', '/order'], // Protect these routes
+    matcher: ['/watchlist', '/holdings', '/order','dashboard'] // Protect these routes
 };

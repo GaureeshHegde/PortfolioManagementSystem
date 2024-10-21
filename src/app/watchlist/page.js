@@ -1,65 +1,214 @@
 "use client";
 
-import { useState } from "react"
-import { ArrowDownIcon, ArrowUpIcon, PlusIcon, Trash2Icon } from "lucide-react"
+import { useState, useEffect } from "react";
+import { ArrowDownIcon, ArrowUpIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { toast } from 'react-hot-toast';
 
-// Mock data for demonstration
-const mockStocks = [
-  { symbol: "AAPL", name: "Apple Inc.", price: 150.25, change: 2.5 },
-  { symbol: "GOOGL", name: "Alphabet Inc.", price: 2750.80, change: -0.8 },
-  { symbol: "MSFT", name: "Microsoft Corporation", price: 305.50, change: 1.2 },
-  { symbol: "AMZN", name: "Amazon.com, Inc.", price: 3380.75, change: -1.5 },
-  { symbol: "FB", name: "Meta Platforms, Inc.", price: 325.30, change: 0.5 },
-]
+// Initial state for the watchlist
+const WatchlistPage = () => {
+  const [watchlist, setWatchlist] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [stockData, setStockData] = useState([]);
+  const [loggedInUserId, setLoggedInUserId] = useState(null);
 
-// Mock function to simulate stock search
-const searchStocks = (query) => {
-  return mockStocks.filter(stock => 
-    stock.symbol.toLowerCase().includes(query.toLowerCase()) || 
-    stock.name.toLowerCase().includes(query.toLowerCase())
-  )
-}
+  // Step 1: Token validation and fetching user's watchlist
+  useEffect(() => {
+    const validateToken = async () => {
+      const token = localStorage.getItem('token');
 
-export default function WatchlistPage() {
-  const [watchlist, setWatchlist] = useState([])
-  const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState([])
+      if (token) {
+        const response = await fetch('/api/validate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token }),
+        });
 
-  const handleSearch = () => {
-    const results = searchStocks(searchQuery)
-    setSearchResults(results)
-  }
+        const data = await response.json();
 
-  const addToWatchlist = (stock) => {
-    if (!watchlist.some(item => item.symbol === stock.symbol)) {
-      setWatchlist([...watchlist, stock]);
-      toast.success(`${stock.symbol} has been added to your watchlist.`); // Ensure this is a string
-    } else {
-      toast.error(`${stock.symbol} is already in your watchlist.`); // Ensure this is a string
+        if (data.success) {
+          console.log(data)
+          setLoggedInUserId(data.id); // Assuming the user ID is stored in `id`
+          fetchUserWatchlist(data.id);
+        } else {
+          toast.error(data.message);
+        }
+      } else {
+        toast.error('No token found, please log in');
+      }
+    };
+
+    validateToken();
+  }, []);
+
+  // Fetch user's watchlist from the API
+  // useEffect(() => {
+  //   if (loggedInUserId) {
+  //     fetchUserWatchlist(loggedInUserId);
+  //   }
+  // }, [loggedInUserId]);
+
+  const fetchUserWatchlist = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/watchlist`, {
+        method: "GET",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const watchlistData = await response.json();
+        setWatchlist(watchlistData.data);
+        console.log(watchlistData.data)
+      } else {
+        const error = await response.json();
+        toast.error(`Failed to load your watchlist: ${error.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      toast.error('Error fetching watchlist data.');
+      console.error('Error fetching watchlist:', error);
     }
   };
 
+  // Fetch stock data for the watchlist at intervals
+  // useEffect(() => {
+  //   const fetchWatchlistData = async () => {
+  //     const token = localStorage.getItem('token');
+  //     if (!token) {
+  //       toast.error('You are not logged in');
+  //       return;
+  //     }
 
-  const removeFromWatchlist = (symbol) => {
-  setWatchlist(watchlist.filter(stock => stock.symbol !== symbol));
-  toast.success("Removed from Watchlist", {
-    description: `${symbol} has been removed from your watchlist.`,
-  });
-};
+  //     const stocks = await Promise.all(
+  //       watchlist.map(async (stock) => {
+  //         const response = await fetch(`/api/stocks?symbol=${stock.symbol}`, {
+  //           headers: {
+  //             'Authorization': `Bearer ${token}`
+  //           }
+  //         });
 
+  //         if (!response.ok) {
+  //           toast.error(`Failed to fetch data for ${stock.symbol}`);
+  //           return stock;
+  //         }
+  //         const data = await response.json();
+  //         return {
+  //           ...stock,
+  //           price: data.price,
+  //           change: data.change,
+  //         };
+  //       })
+  //     );
+  //     setStockData(stocks);
+  //   };
+
+  //   fetchWatchlistData();
+
+  //   const intervalId = setInterval(fetchWatchlistData, 300000); // 5 minutes
+  //   return () => clearInterval(intervalId);
+  // }, [watchlist]);
+
+  // Handle search and add stock to watchlist
+  const handleSearch = async () => {
+    const trimmedQuery = searchQuery.trim();
+    if (!trimmedQuery) {
+      toast.error("Please enter a stock symbol to search.");
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`/api/stocks?symbol=${trimmedQuery}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        toast.error(`Error: ${error.message || "Unable to fetch stock data"}`);
+        return;
+      }
+
+      const stockData = await response.json();
+      if (stockData) {
+        setSearchResults([stockData]);
+      } else {
+        toast.error("No results found for this symbol.");
+        setSearchResults([]);
+      }
+    } catch (error) {
+      toast.error("An error occurred while searching for the stock.");
+      console.error(error);
+    }
+  };
+
+  // Step 2: Add stock to user's watchlist via API
+  const addToWatchlist = async (stock) => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch('/api/watchlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ symbol: stock.symbol, price: stock.price, change: stock.change}),
+      });
+
+      if (response.ok) {
+        setWatchlist([...watchlist, stock]);
+        toast.success(`${stock.symbol} has been added to your watchlist.`);
+      } else {
+        const error = await response.json();
+        toast.error(`Failed to add stock: ${error.message}`);
+      }
+    } catch (error) {
+      toast.error('Error adding stock to watchlist.');
+      console.error('Error adding stock:', error);
+    }
+  };
+
+  // Step 3: Remove stock from user's watchlist via API
+  const removeFromWatchlist = async (symbol) => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`/api/watchlist?symbol=${symbol}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setWatchlist(watchlist.filter(stock => stock.symbol !== symbol));
+        toast.success(`${symbol} has been removed from your watchlist.`);
+      } else {
+        const error = await response.json();
+        toast.error(`Failed to remove stock: ${error.message}`);
+      }
+    } catch (error) {
+      toast.error('Error removing stock from watchlist.');
+      console.error('Error removing stock:', error);
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Your Watchlist</h1>
-      
+
       <div className="card shadow-lg mb-6">
         <div className="card-body">
           <h2 className="card-title">Search Stocks</h2>
           <div className="flex gap-2">
-            <input 
-              type="text" 
-              placeholder="Search by symbol or name"
+            <input
+              type="text"
+              placeholder="Search by symbol"
               className="input input-bordered w-full"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -126,10 +275,10 @@ export default function WatchlistPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {watchlist.map((stock) => (
+                  {watchlist.map((stock) => ( // Use stockData for rendering
                     <tr key={stock.symbol}>
                       <td>{stock.symbol}</td>
-                      <td>{stock.name}</td>
+                      {/* <td>{stock.name}</td> */}
                       <td className="text-right">${stock.price.toFixed(2)}</td>
                       <td className="text-right">
                         <span className={stock.change >= 0 ? "text-green-600" : "text-red-600"}>
@@ -152,5 +301,7 @@ export default function WatchlistPage() {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
+
+export default WatchlistPage;
