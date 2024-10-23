@@ -127,7 +127,7 @@ export default function LandingPage() {
                   Sign Up for Free
                 </button>
               </Link>
-              <Link href="/learn-more">
+              <Link href="/faqs">
                 <button className="border-2 border-[#4ac1ff] text-[#4ac1ff] hover:bg-[#001f3f] hover:text-white font-bold py-3 px-8 rounded-lg text-lg">
                   Learn More
                 </button>

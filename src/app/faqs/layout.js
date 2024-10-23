@@ -8,6 +8,7 @@ export default function Layout({ children }) {
             <body className="bg-gradient-to-r from-blue-500 to-cyan-500">
             <PageNavbar />
             {children}
+            
             </body>
         </html>
     );
