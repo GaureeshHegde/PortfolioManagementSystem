@@ -43,11 +43,16 @@ export async function GET(req) {
 
         console.log('Stock data result:', result); // Log the result
 
+        // Construct the stock data object with the required attributes
         const stockData = {
             symbol: result.symbol,
             name: result.longName || result.shortName || symbol,
             price: result.regularMarketPrice,
-            change: result.regularMarketChangePercent
+            change: result.regularMarketChangePercent,
+            highestPrice: result.fiftyTwoWeekHigh,  // Highest price over the last year
+            lowestPrice: result.fiftyTwoWeekLow,    // Lowest price over the last year
+            faceValue: result.priceToBook,          // Placeholder for face value (use appropriate field if available)
+            peRatio: result.trailingPE                // PE ratio
         };
 
         return new Response(JSON.stringify(stockData), { status: 200 });
@@ -59,3 +64,5 @@ export async function GET(req) {
         return new Response(JSON.stringify({ error: 'Failed to fetch stock data' }), { status: 500 });
     }
 }
+
+

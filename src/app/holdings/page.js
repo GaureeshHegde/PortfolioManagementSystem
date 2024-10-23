@@ -1,18 +1,70 @@
 "use client";
 
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react"
-
-// Mock data for demonstration
-const holdings = [
-  { symbol: "AAPL", name: "Apple Inc.", quantity: 10, price: 150.25, change: 2.5 },
-  { symbol: "GOOGL", name: "Alphabet Inc.", quantity: 5, price: 2750.80, change: -0.8 },
-  { symbol: "MSFT", name: "Microsoft Corporation", quantity: 15, price: 305.50, change: 1.2 },
-  { symbol: "AMZN", name: "Amazon.com, Inc.", quantity: 8, price: 3380.75, change: -1.5 },
-  { symbol: "FB", name: "Meta Platforms, Inc.", quantity: 20, price: 325.30, change: 0.5 },
-]
+import { useState,useEffect } from 'react';
 
 export default function HoldingsPage() {
+
+  const [holdings, setHoldings] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+
   const totalValue = holdings.reduce((sum, holding) => sum + holding.quantity * holding.price, 0)
+
+  useEffect(() => {
+    const validateToken = async () => {
+      const token = localStorage.getItem('token');
+
+      if (token) {
+        const response = await fetch('/api/validate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          console.log(data)
+          setLoggedInUserId(data.id); // Assuming the user ID is stored in `id`
+          fetchUserHoldings(data.id);
+        } else {
+          toast.error(data.message);
+        }
+      } else {
+        toast.error('No token found, please log in');
+      }
+    };
+
+    validateToken();
+  }, []);
+
+  const fetchUserHoldings= async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/holdings`, {
+        method: "GET",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const holdingsData = await response.json();
+        setHoldings(holdingsData.data);
+        console.log(holdingsData.data)
+      } else {
+        const error = await response.json();
+        toast.error(`Failed to load your holdings: ${error.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      toast.error('Error fetching holdings data.');
+      console.error('Error fetching holdings:', error);
+    }
+  };
+
 
   return (
     <div className="container mx-auto p-4">

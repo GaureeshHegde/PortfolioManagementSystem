@@ -1,27 +1,61 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowDownIcon, ArrowUpIcon, PlusIcon, Trash2Icon } from "lucide-react";
-import { toast } from 'react-hot-toast';
+import { ArrowDownIcon, ArrowUpIcon, PlusIcon, TrashIcon } from "lucide-react";
+import { toast } from "react-hot-toast";
 
-// Initial state for the watchlist
+
 const WatchlistPage = () => {
   const [watchlist, setWatchlist] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const [stockData, setStockData] = useState([]);
   const [loggedInUserId, setLoggedInUserId] = useState(null);
+  const [selectedStock, setSelectedStock] = useState(null); // For holding the stock details for the modal
+  const [showModal, setShowModal] = useState(false); // For controlling modal visibility
 
-  // Step 1: Token validation and fetching user's watchlist
+
+// Fetch stock details when a stock is clicked
+const StockDetailsDialog = async (symbol) => {
+  const token = localStorage.getItem("token");
+  try {
+    const response = await fetch(`/api/stocks?symbol=${encodeURIComponent(symbol)}`, { // Use the stocks API to get detailed info
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.ok) {
+      const stockDetails = await response.json();
+      setSelectedStock(stockDetails); // Set stock details for the modal
+      setShowModal(true); // Show the modal
+    } else {
+      const error = await response.json();
+      toast.error(`Error fetching stock details: ${error.message}`);
+    }
+  } catch (error) {
+    toast.error("Error fetching stock details.");
+  }
+};
+
+const handleSelectStock = (symbol) => {
+  StockDetailsDialog(symbol); // Call the StockDetailsDialog with the selected symbol
+};
+
+const handleCloseModal = () => {
+  setSelectedStock(null); // Clear selected stock
+  setShowModal(false); // Close the modal
+};
+
   useEffect(() => {
     const validateToken = async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
 
       if (token) {
-        const response = await fetch('/api/validate', {
-          method: 'POST',
+        const response = await fetch("/api/validate", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ token }),
         });
@@ -29,180 +63,128 @@ const WatchlistPage = () => {
         const data = await response.json();
 
         if (data.success) {
-          console.log(data)
-          setLoggedInUserId(data.id); // Assuming the user ID is stored in `id`
-          fetchUserWatchlist(data.id);
+          setLoggedInUserId(data.id);
+          fetchUserWatchlist();
         } else {
           toast.error(data.message);
         }
       } else {
-        toast.error('No token found, please log in');
+        toast.error("No token found, please log in");
       }
     };
 
     validateToken();
   }, []);
 
-  // Fetch user's watchlist from the API
-  // useEffect(() => {
-  //   if (loggedInUserId) {
-  //     fetchUserWatchlist(loggedInUserId);
-  //   }
-  // }, [loggedInUserId]);
-
   const fetchUserWatchlist = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/watchlist`, {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/watchlist", {
         method: "GET",
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (response.ok) {
         const watchlistData = await response.json();
         setWatchlist(watchlistData.data);
-        console.log(watchlistData.data)
       } else {
         const error = await response.json();
-        toast.error(`Failed to load your watchlist: ${error.message || 'Unknown error'}`);
+        toast.error(`Failed to load watchlist: ${error.message}`);
       }
     } catch (error) {
-      toast.error('Error fetching watchlist data.');
-      console.error('Error fetching watchlist:', error);
+      toast.error("Error fetching watchlist.");
     }
   };
 
-  // Fetch stock data for the watchlist at intervals
-  // useEffect(() => {
-  //   const fetchWatchlistData = async () => {
-  //     const token = localStorage.getItem('token');
-  //     if (!token) {
-  //       toast.error('You are not logged in');
-  //       return;
-  //     }
-
-  //     const stocks = await Promise.all(
-  //       watchlist.map(async (stock) => {
-  //         const response = await fetch(`/api/stocks?symbol=${stock.symbol}`, {
-  //           headers: {
-  //             'Authorization': `Bearer ${token}`
-  //           }
-  //         });
-
-  //         if (!response.ok) {
-  //           toast.error(`Failed to fetch data for ${stock.symbol}`);
-  //           return stock;
-  //         }
-  //         const data = await response.json();
-  //         return {
-  //           ...stock,
-  //           price: data.price,
-  //           change: data.change,
-  //         };
-  //       })
-  //     );
-  //     setStockData(stocks);
-  //   };
-
-  //   fetchWatchlistData();
-
-  //   const intervalId = setInterval(fetchWatchlistData, 300000); // 5 minutes
-  //   return () => clearInterval(intervalId);
-  // }, [watchlist]);
-
-  // Handle search and add stock to watchlist
   const handleSearch = async () => {
-    const trimmedQuery = searchQuery.trim();
-    if (!trimmedQuery) {
-      toast.error("Please enter a stock symbol to search.");
+    if (!searchQuery.trim()) {
+      toast.error("Please enter a stock symbol.");
       return;
     }
-
-    const token = localStorage.getItem('token');
+  
+    const token = localStorage.getItem("token");
     try {
-      const response = await fetch(`/api/stocks?symbol=${trimmedQuery}`, {
-        method: 'GET',
+      const response = await fetch(`/api/stocks?symbol=${searchQuery.trim()}`, {
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
-
+  
       if (!response.ok) {
         const error = await response.json();
         toast.error(`Error: ${error.message || "Unable to fetch stock data"}`);
         return;
       }
-
+  
       const stockData = await response.json();
-      if (stockData) {
-        setSearchResults([stockData]);
-      } else {
-        toast.error("No results found for this symbol.");
-        setSearchResults([]);
-      }
+      setSearchResults([...searchResults, stockData]); // Assuming you're handling a single stock result for now
+  
+      // Call StockDetailsDialog when a stock is clicked from search results
+      // handleSelectStock(stockData.symbol);
     } catch (error) {
       toast.error("An error occurred while searching for the stock.");
-      console.error(error);
     }
   };
 
-  // Step 2: Add stock to user's watchlist via API
   const addToWatchlist = async (stock) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     try {
-      const response = await fetch('/api/watchlist', {
-        method: 'POST',
+      const response = await fetch("/api/watchlist", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ symbol: stock.symbol, price: stock.price, change: stock.change}),
+        body: JSON.stringify(stock),
       });
 
       if (response.ok) {
         setWatchlist([...watchlist, stock]);
-        toast.success(`${stock.symbol} has been added to your watchlist.`);
+        toast.success(`${stock.symbol} added to your watchlist.`);
       } else {
         const error = await response.json();
         toast.error(`Failed to add stock: ${error.message}`);
       }
     } catch (error) {
-      toast.error('Error adding stock to watchlist.');
-      console.error('Error adding stock:', error);
+      toast.error("Error adding stock to watchlist.");
     }
   };
 
-  // Step 3: Remove stock from user's watchlist via API
   const removeFromWatchlist = async (symbol) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     try {
       const response = await fetch(`/api/watchlist?symbol=${symbol}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (response.ok) {
-        setWatchlist(watchlist.filter(stock => stock.symbol !== symbol));
-        toast.success(`${symbol} has been removed from your watchlist.`);
+        setWatchlist(watchlist.filter((stock) => stock.symbol !== symbol));
+        toast.success(`${symbol} removed from your watchlist.`);
       } else {
         const error = await response.json();
         toast.error(`Failed to remove stock: ${error.message}`);
       }
     } catch (error) {
-      toast.error('Error removing stock from watchlist.');
-      console.error('Error removing stock:', error);
+      toast.error("Error removing stock from watchlist.");
     }
+  };
+
+  const handleStockSelect = (stock) => {
+    setSelectedStock(stock);
   };
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Your Watchlist</h1>
-
-      <div className="card shadow-lg mb-6">
+  
+      {/* Search section */}
+      <div className="card bg-base-100 shadow-lg mb-6">
         <div className="card-body">
           <h2 className="card-title">Search Stocks</h2>
           <div className="flex gap-2">
@@ -212,12 +194,14 @@ const WatchlistPage = () => {
               className="input input-bordered w-full"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              onKeyPress={(e) => e.key === "Enter" && handleSearch()}
             />
             <button className="btn btn-primary" onClick={handleSearch}>
               Search
             </button>
           </div>
+  
+          {/* Search Results Table */}
           {searchResults.length > 0 && (
             <div className="overflow-x-auto mt-4">
               <table className="table w-full">
@@ -232,18 +216,32 @@ const WatchlistPage = () => {
                 </thead>
                 <tbody>
                   {searchResults.map((stock) => (
-                    <tr key={stock.symbol}>
+                    <tr
+                      key={stock.symbol}
+                      onClick={() => StockDetailsDialog(stock.symbol)} // Call with symbol
+                      className="cursor-pointer hover:bg-gray-100"
+                    >
                       <td>{stock.symbol}</td>
                       <td>{stock.name}</td>
                       <td className="text-right">${stock.price.toFixed(2)}</td>
                       <td className="text-right">
                         <span className={stock.change >= 0 ? "text-green-600" : "text-red-600"}>
-                          {stock.change >= 0 ? <ArrowUpIcon className="inline h-4 w-4" /> : <ArrowDownIcon className="inline h-4 w-4" />}
+                          {stock.change >= 0 ? (
+                            <ArrowUpIcon className="inline h-4 w-4" />
+                          ) : (
+                            <ArrowDownIcon className="inline h-4 w-4" />
+                          )}
                           {Math.abs(stock.change)}%
                         </span>
                       </td>
                       <td>
-                        <button className="btn btn-outline btn-sm" onClick={() => addToWatchlist(stock)}>
+                        <button
+                          className="btn btn-outline btn-sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToWatchlist(stock);
+                          }}
+                        >
                           <PlusIcon className="h-4 w-4 mr-2" />
                           Add
                         </button>
@@ -256,8 +254,9 @@ const WatchlistPage = () => {
           )}
         </div>
       </div>
-
-      <div className="card shadow-lg">
+  
+      {/* Watchlist Table */}
+      <div className="card bg-base-100 shadow-lg">
         <div className="card-body">
           <h2 className="card-title">Your Watchlist</h2>
           {watchlist.length === 0 ? (
@@ -275,20 +274,28 @@ const WatchlistPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {watchlist.map((stock) => ( // Use stockData for rendering
-                    <tr key={stock.symbol}>
+                  {watchlist.map((stock) => (
+                    <tr
+                      key={stock.symbol}
+                      onClick={() => StockDetailsDialog(stock.symbol)} // Call with symbol
+                      className="cursor-pointer hover:bg-gray-100"
+                    >
                       <td>{stock.symbol}</td>
-                      {/* <td>{stock.name}</td> */}
-                      <td className="text-right">${stock.price.toFixed(2)}</td>
+                      <td>{stock.name}</td>
+                      <td className="text-right">${stock.price?.toFixed(2)}</td>
                       <td className="text-right">
                         <span className={stock.change >= 0 ? "text-green-600" : "text-red-600"}>
-                          {stock.change >= 0 ? <ArrowUpIcon className="inline h-4 w-4" /> : <ArrowDownIcon className="inline h-4 w-4" />}
+                          {stock.change >= 0 ? (
+                            <ArrowUpIcon className="inline h-4 w-4" />
+                          ) : (
+                            <ArrowDownIcon className="inline h-4 w-4" />
+                          )}
                           {Math.abs(stock.change)}%
                         </span>
                       </td>
                       <td>
-                        <button className="btn btn-outline btn-sm" onClick={() => removeFromWatchlist(stock.symbol)}>
-                          <Trash2Icon className="h-4 w-4 mr-2" />
+                        <button className="btn btn-outline btn-sm btn-error" onClick={() => removeFromWatchlist(stock.symbol)}>
+                          <TrashIcon className="h-4 w-4 mr-2" />
                           Remove
                         </button>
                       </td>
@@ -300,6 +307,49 @@ const WatchlistPage = () => {
           )}
         </div>
       </div>
+  
+      {/* Stock Details Dialog */}
+{showModal && (
+  <dialog open className="modal modal-bottom sm:modal-middle">
+    <form method="dialog" className="modal-box">
+      <h3 className="font-bold text-lg">
+        {selectedStock.symbol} - {selectedStock.name || "N/A"}
+      </h3>
+      <div className="py-4">
+        <table className="table w-full">
+          <tbody>
+            <tr>
+              <th>Symbol</th>
+              <td>{selectedStock.symbol}</td>
+            </tr>
+            <tr>
+              <th>Highest Price</th>
+              <td>${selectedStock.highestPrice?.toFixed(2) || "N/A"}</td>
+            </tr>
+            <tr>
+              <th>Lowest Price</th>
+              <td>${selectedStock.lowestPrice?.toFixed(2) || "N/A"}</td>
+            </tr>
+            <tr>
+              <th>Face Value</th>
+              <td>${selectedStock.faceValue?.toFixed(2) || "N/A"}</td>
+            </tr>
+            <tr>
+              <th>PE Ratio</th>
+              <td>{selectedStock.peRatio?.toFixed(2) || "N/A"}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div className="modal-action">
+        <button className="btn" onClick={handleCloseModal}>
+          Close
+        </button>
+      </div>
+    </form>
+  </dialog>
+)}
+
     </div>
   );
 };
