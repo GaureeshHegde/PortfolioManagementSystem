@@ -18,15 +18,15 @@ export async function POST(req) {
     try {
         // Check if a user with the same username or email already exists
         const existingUserQuery = `SELECT * FROM users WHERE username = $1 OR email = $2`;
-        console.log("Here")
-        console.log(process.env.POSTGRES_URL)
+        //console.log("Here")
+        //console.log(process.env.POSTGRES_URL)
         const existingUser = await pool.query(existingUserQuery, [username, email]);
 
-        console.log("here")
+        //console.log("here")
         if (existingUser.rows.length > 0) {
             return NextResponse.json({ success: false, message: "User already exists" });
         }
-        console.log("here")
+        //console.log("here")
 
 
         // Insert the new user into the database
