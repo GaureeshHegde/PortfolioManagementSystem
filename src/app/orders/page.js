@@ -1,12 +1,18 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { toast } from "react-toastify"; // Using react-toastify for toast notifications
+import { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { useForm } from "react-hook-form"
+import { toast } from "react-hot-toast"
+import { ArrowUpIcon, ArrowDownIcon } from "lucide-react"
 
-// Zod Schema for form validation
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+
 const formSchema = z.object({
   stockSymbol: z
     .string()
@@ -20,11 +26,10 @@ const formSchema = z.object({
   action: z.enum(["buy", "sell"], {
     required_error: "You need to select an action",
   }),
-});
+})
 
-// Mock function to simulate API call
 const mockTradeStock = async (values) => {
-  await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API delay
+  await new Promise((resolve) => setTimeout(resolve, 1000))
   return {
     success: true,
     message: `Successfully ${values.action === "buy" ? "bought" : "sold"} ${values.quantity} shares of ${values.stockSymbol}`,
@@ -32,137 +37,137 @@ const mockTradeStock = async (values) => {
       stockSymbol: values.stockSymbol,
       quantity: values.quantity,
       action: values.action,
-      price: 150.25, // Mock price
+      price: 150.25,
     },
-  };
-};
+  }
+}
 
 export default function BuySellPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       stockSymbol: "",
       quantity: 1,
       action: "buy",
     },
-  });
+  })
 
   async function onSubmit(values) {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const result = await mockTradeStock(values);
+      const result = await mockTradeStock(values)
       if (result.success) {
-        toast.success(result.message); // Show success toast
-        reset();
+        toast.success(result.message)
+        form.reset()
       } else {
-        throw new Error("Trade failed");
+        throw new Error("Trade failed")
       }
     } catch (error) {
-      toast.error("There was a problem executing your trade. Please try again.");
+      toast.error("There was a problem executing your trade. Please try again.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="card max-w-md mx-auto bg-base-100 shadow-xl">
-        <div className="card-body">
-          <h2 className="card-title">Buy/Sell Stocks</h2>
-          <p>Enter the details of your trade below.</p>
-
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Stock Symbol */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Stock Symbol</span>
-              </label>
-              <input
-                type="text"
-                placeholder="AAPL"
-                className="input input-bordered"
-                {...register("stockSymbol")}
-              />
-              {errors.stockSymbol && (
-                <p className="text-red-500">{errors.stockSymbol.message}</p>
-              )}
-              <label className="label">
-                <span className="label-text-alt">
-                  Please enter the exact stock symbol.
-                </span>
-              </label>
-            </div>
-
-            {/* Quantity */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Quantity</span>
-              </label>
-              <input
-                type="number"
-                placeholder="1"
-                className="input input-bordered"
-                {...register("quantity", { valueAsNumber: true })}
-              />
-              {errors.quantity && (
-                <p className="text-red-500">{errors.quantity.message}</p>
-              )}
-              <label className="label">
-                <span className="label-text-alt">
-                  Enter the number of shares you want to trade
-                </span>
-              </label>
-            </div>
-
-            {/* Buy/Sell Radio Group */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Action</span>
-              </label>
-              <div className="flex space-x-4">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    value="buy"
-                    className="radio radio-success"
-                    {...register("action")}
-                    defaultChecked
-                  />
-                  <span>Buy</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    value="sell"
-                    className="radio radio-error"
-                    {...register("action")}
-                  />
-                  <span>Sell</span>
-                </label>
+    <div className="flex flex-col min-h-screen w-full overflow-x-hidden bg-gradient-to-b from-[#001f3f] to-black text-white">
+      <main className="flex-1 container mx-auto p-4">
+        <Card className="w-full max-w-md mx-auto bg-[#0a2a4d] shadow-xl">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-[#4ac1ff]">Buy/Sell Stocks</CardTitle>
+            <CardDescription className="text-gray-300">Enter the details of your trade below.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <div className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="stockSymbol"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Stock Symbol</FormLabel>
+                      <FormControl>
+                        <Input placeholder="AAPL" {...field} className="bg-[#001f3f] text-white border-[#4ac1ff]" />
+                      </FormControl>
+                      <FormDescription className="text-gray-400">
+                        Please enter the exact stock symbol.
+                      </FormDescription>
+                      <FormMessage className="text-red-400" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="quantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Quantity</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="1"
+                          {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          className="bg-[#001f3f] text-white border-[#4ac1ff]"
+                        />
+                      </FormControl>
+                      <FormDescription className="text-gray-400">
+                        Enter the number of shares you want to trade
+                      </FormDescription>
+                      <FormMessage className="text-red-400" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="action"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel className="text-white">Action</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex space-x-4"
+                        >
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="buy" className="text-[#4ac1ff]" />
+                            </FormControl>
+                            <FormLabel className="font-normal text-white">
+                              <ArrowUpIcon className="h-4 w-4 inline-block mr-1 text-green-400" />
+                              Buy
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="sell" className="text-[#4ac1ff]" />
+                            </FormControl>
+                            <FormLabel className="font-normal text-white">
+                              <ArrowDownIcon className="h-4 w-4 inline-block mr-1 text-red-400" />
+                              Sell
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage className="text-red-400" />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  className="w-full bg-[#4ac1ff] hover:bg-[#39a0e5] text-white font-bold"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Processing..." : "Execute Trade"}
+                </Button>
               </div>
-              {errors.action && (
-                <p className="text-red-500">{errors.action.message}</p>
-              )}
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className={`btn btn-primary w-full ${isLoading ? "loading" : ""}`}
-              disabled={isLoading}
-            >
-              {isLoading ? "Processing..." : "Execute Trade"}
-            </button>
-          </form>
-        </div>
-      </div>
+            </Form>
+          </CardContent>
+        </Card>
+      </main>
     </div>
-  );
+  )
 }
