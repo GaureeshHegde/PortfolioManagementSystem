@@ -220,7 +220,7 @@ export default function LoginPage() {
       {/* Right Side - Image */}
       <div className="hidden lg:block w-1/2 h-screen">
         <img
-          src="/LandingPage.jpg"
+          src="/img2.jpg"
           alt="Investment Illustration"
           className="object-cover w-full h-full"
         />
