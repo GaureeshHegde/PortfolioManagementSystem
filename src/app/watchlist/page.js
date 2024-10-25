@@ -223,7 +223,7 @@ const handleCloseModal = () => {
                     >
                       <td>{stock.symbol}</td>
                       <td>{stock.name}</td>
-                      <td className="text-right">${stock.price.toFixed(2)}</td>
+                      <td className="text-right">${stock.price}</td>
                       <td className="text-right">
                         <span className={stock.change >= 0 ? "text-green-600" : "text-red-600"}>
                           {stock.change >= 0 ? (
@@ -282,7 +282,7 @@ const handleCloseModal = () => {
                     >
                       <td>{stock.symbol}</td>
                       <td>{stock.name}</td>
-                      <td className="text-right">${stock.price?.toFixed(2)}</td>
+                      <td className="text-right">${stock.price}</td>
                       <td className="text-right">
                         <span className={stock.change >= 0 ? "text-green-600" : "text-red-600"}>
                           {stock.change >= 0 ? (
