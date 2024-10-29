@@ -25,10 +25,13 @@ const StockDetailsDialog = async (symbol) => {
       },
     });
 
+    // If the response is OK, we fetch the JSON response
+    // and update the selectedStock state with the fetched data
+    // and set showModal to true to show the modal with the stock details
     if (response.ok) {
       const stockDetails = await response.json();
-      setSelectedStock(stockDetails); // Set stock details for the modal
-      setShowModal(true); // Show the modal
+      setSelectedStock(stockDetails);
+      setShowModal(true); 
     } else {
       const error = await response.json();
       toast.error(`Error fetching stock details: ${error.message}`);
@@ -48,10 +51,12 @@ const handleCloseModal = () => {
 };
 
   useEffect(() => {
+    // Validate token with the API
     const validateToken = async () => {
       const token = localStorage.getItem("token");
 
       if (token) {
+        // POST /api/validate with the token
         const response = await fetch("/api/validate", {
           method: "POST",
           headers: {
@@ -60,15 +65,21 @@ const handleCloseModal = () => {
           body: JSON.stringify({ token }),
         });
 
+        // If the response is OK, we get the JSON response
+        // which contains the user ID if the token is valid
         const data = await response.json();
 
         if (data.success) {
+          // If the token is valid, we set the user ID in state
+          // and fetch the user's watchlist (which requires a valid token)
           setLoggedInUserId(data.id);
           fetchUserWatchlist();
         } else {
+          // If the token is invalid, we show an error message
           toast.error(data.message);
         }
       } else {
+        // If there is no token in local storage, we show an error message
         toast.error("No token found, please log in");
       }
     };
@@ -76,6 +87,12 @@ const handleCloseModal = () => {
     validateToken();
   }, []);
 
+  /**
+   * Fetches the user's watchlist from the /api/watchlist API.
+   * This API requires a valid token in the Authorization header.
+   * If the response is OK, the watchlist data is stored in the component state.
+   * If the response is not OK, an error message is shown to the user.
+   */
   const fetchUserWatchlist = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -129,6 +146,16 @@ const handleCloseModal = () => {
     }
   };
 
+  /**
+   * Adds a stock to the user's watchlist by calling the /api/watchlist POST API.
+   * The API requires a valid token in the Authorization header.
+   * We pass the stock object as a parameter to the API so that the API can store
+   * the stock data in the user's watchlist in the database.
+   * If the API response is OK, we update the watchlist state by adding the new
+   * stock to the existing watchlist array.
+   * If the API response is not OK, we show an error message to the user.
+   * @param {object} stock The stock object to be added to the watchlist
+   */
   const addToWatchlist = async (stock) => {
     const token = localStorage.getItem("token");
     try {
@@ -142,6 +169,9 @@ const handleCloseModal = () => {
       });
 
       if (response.ok) {
+        // We spread the existing watchlist array and add the new stock to it
+        // We use the spread operator (...) to create a new array with the
+        // existing elements and the new stock
         setWatchlist([...watchlist, stock]);
         toast.success(`${stock.symbol} added to your watchlist.`);
       } else {
@@ -164,6 +194,10 @@ const handleCloseModal = () => {
       });
 
       if (response.ok) {
+        // We filter the watchlist array to remove the stock with the given symbol
+        // We use the filter() method to create a new array with all the elements
+        // that do not match the given symbol
+        // We update the watchlist state with the new filtered array
         setWatchlist(watchlist.filter((stock) => stock.symbol !== symbol));
         toast.success(`${symbol} removed from your watchlist.`);
       } else {
@@ -202,6 +236,9 @@ const handleCloseModal = () => {
           </div>
   
           {/* Search Results Table */}
+          {/* searchResults is an array of stock objects that are fetched from the API when the user searches for a stock. 
+          The array is initially empty and gets populated when the user searches for a stock.
+          Each stock object in the array has the following properties: symbol, name, price, change */}
           {searchResults.length > 0 && (
             <div className="overflow-x-auto mt-4">
               <table className="table w-full">

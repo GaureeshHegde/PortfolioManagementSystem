@@ -5,8 +5,18 @@ import yahooFinance from 'yahoo-finance2'; // Add Yahoo Finance API
 
 // Fetch user's watchlist and include stock data from Yahoo Finance API
 export async function GET(req) {
+    // Get the Authorization header from the request headers
     const authHeader = req.headers.get('authorization');
+
+    // Split the Authorization header into two parts: the type and the token
+    // The type is usually "Bearer" and the token is the JSON Web Token
+    // If there is no Authorization header, authHeader will be null
+    // The && operator is a short-circuit operator that returns the first
+    // expression if it is truthy, otherwise it returns the second expression
+    // In this case, if authHeader is null, the && operator will return null
+    // Otherwise, it will return the second part of the split string, which is the token
     const token = authHeader && authHeader.split(' ')[1];
+
 
     if (!token) {
         return new Response(JSON.stringify({ error: 'Authorization token missing' }), { status: 401 });
