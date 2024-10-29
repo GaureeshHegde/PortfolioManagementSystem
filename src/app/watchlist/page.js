@@ -105,6 +105,7 @@ const handleCloseModal = () => {
     }
   
     const token = localStorage.getItem("token");
+  
     try {
       const response = await fetch(`/api/stocks?symbol=${searchQuery.trim()}`, {
         method: "GET",
@@ -120,7 +121,18 @@ const handleCloseModal = () => {
       }
   
       const stockData = await response.json();
-      setSearchResults([...searchResults, stockData]); // Assuming you're handling a single stock result for now
+  
+      // Check if the stock already exists in searchResults
+      const isDuplicate = searchResults.some(
+        (stock) => stock.symbol === stockData.symbol
+      );
+  
+      if (isDuplicate) {
+        toast.error("This stock is already in your search results.");
+        return;
+      }
+  
+      setSearchResults([...searchResults, stockData]); // Add stock to searchResults if it's not a duplicate
   
       // Call StockDetailsDialog when a stock is clicked from search results
       // handleSelectStock(stockData.symbol);
@@ -128,9 +140,18 @@ const handleCloseModal = () => {
       toast.error("An error occurred while searching for the stock.");
     }
   };
-
+  
   const addToWatchlist = async (stock) => {
+    // Check if the stock is already in the watchlist
+    const isDuplicate = watchlist.some((item) => item.symbol === stock.symbol);
+  
+    if (isDuplicate) {
+      toast.error(`${stock.symbol} is already in your watchlist.`);
+      return;
+    }
+  
     const token = localStorage.getItem("token");
+    
     try {
       const response = await fetch("/api/watchlist", {
         method: "POST",
@@ -140,7 +161,7 @@ const handleCloseModal = () => {
         },
         body: JSON.stringify(stock),
       });
-
+  
       if (response.ok) {
         setWatchlist([...watchlist, stock]);
         toast.success(`${stock.symbol} added to your watchlist.`);
@@ -152,7 +173,8 @@ const handleCloseModal = () => {
       toast.error("Error adding stock to watchlist.");
     }
   };
-
+  
+  
   const removeFromWatchlist = async (symbol) => {
     const token = localStorage.getItem("token");
     try {

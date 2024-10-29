@@ -55,9 +55,11 @@ export default function BuySellPage() {
   });
 
   async function onSubmit(values) {
+    console.log("Form Values Submitted:", values); // Log form values
     setIsLoading(true);
     try {
       const result = await mockTradeStock(values);
+      console.log("API Result:", result); // Log the API result
       if (result.success) {
         toast.success(result.message); // Show success toast
         reset();
@@ -65,12 +67,13 @@ export default function BuySellPage() {
         throw new Error("Trade failed");
       }
     } catch (error) {
+      console.error("Error Executing Trade:", error); // Log the error
       toast.error("There was a problem executing your trade. Please try again.");
     } finally {
       setIsLoading(false);
     }
   }
-
+  
   return (
     <div className="container mx-auto p-4">
       <div className="card max-w-md mx-auto bg-base-100 shadow-xl">
