@@ -19,15 +19,17 @@ export default function LoginPage() {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
   const showAlert = (message) => {
+    console.log("Alert: ", message) // Log the message shown in alerts
     alert(message)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+    console.log("Form Submitted with values:", { email, username, password, confrmPassword })
 
     if (isCreatingAccount) {
-      // Account creation logic
+      console.log("Creating account...") // Log the account creation flow
       if (password === "" || confrmPassword === "" || email === "" || username === "") {
         showAlert("Please fill in all fields")
         setLoading(false)
@@ -42,6 +44,7 @@ export default function LoginPage() {
         return
       } else {
         try {
+          console.log("Sending sign up request...") // Log the API request
           const res = await fetch("/api/signup", {
             method: "POST",
             headers: {
@@ -51,17 +54,20 @@ export default function LoginPage() {
           })
 
           if (!res.ok) {
+            console.log("Signup failed", res) // Log failure response
             showAlert("Failed to create account")
           } else {
+            console.log("Signup successful", res) // Log success response
             showAlert("Account created successfully!")
           }
         } catch (error) {
+          console.error("Error during signup:", error) // Log any error caught
           showAlert("An error occurred")
         }
         setLoading(false)
       }
     } else {
-      // Handle login logic
+      console.log("Logging in...") // Log the login flow
       if (email === "" || password === "") {
         showAlert("Please fill in all fields")
         setLoading(false)
@@ -69,6 +75,7 @@ export default function LoginPage() {
       }
 
       try {
+        console.log("Sending login request...") // Log the API request
         const res = await fetch("/api/authenticate", {
           method: "POST",
           headers: {
@@ -78,15 +85,19 @@ export default function LoginPage() {
         })
 
         const data = await res.json()
+        console.log("Login response:", data) // Log the API response
 
         if (res.ok && data?.token) {
+          console.log("Login successful, token:", data.token) // Log success
           localStorage.setItem("token", data.token)
           showAlert("Login successful!")
           window.location.href = "/watchlist"
         } else {
+          console.error("Login failed", data) // Log any failure response
           showAlert(data.message || "Login failed. Please try again.")
         }
       } catch (error) {
+        console.error("Error during login:", error) // Log any error caught
         showAlert("An error occurred. Please try again later.")
       }
 
@@ -220,7 +231,7 @@ export default function LoginPage() {
       {/* Right Side - Image */}
       <div className="hidden lg:block w-1/2 h-screen">
         <img
-          src="/LandingPage.jpg"
+          src="/img2.jpg"
           alt="Investment Illustration"
           className="object-cover w-full h-full"
         />

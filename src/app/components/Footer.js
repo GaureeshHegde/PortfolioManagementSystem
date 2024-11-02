@@ -3,7 +3,7 @@ import { FaInstagram, FaLinkedin, FaTwitter } from 'react-icons/fa';
 
 const Footer = () => {
   return (
-    <footer className="bg-gradient-to-r from-[#001f3f] to-black text-white py-6">
+    <div className="bg-gradient-to-r from-[#001f3f] to-black text-white py-6">
       <div className="container mx-auto text-center">
         <p className="text-sm text-gray-300">&copy; 2024 YourCompany. All rights reserved.</p>
         <div className="flex justify-center mt-4 space-x-6">
@@ -23,7 +23,7 @@ const Footer = () => {
           </Link>
         </div>
       </div>
-    </footer>
+    </div>
   );
 };
 

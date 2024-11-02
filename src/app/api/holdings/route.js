@@ -3,7 +3,7 @@ import pool from '../../utils/dbconnect'; // Database connection
 import { NextResponse } from 'next/server';
 
 // GET Method: Fetch user's holdings
-import yahooFinance from 'yahoo-finance'; // Ensure you import Yahoo Finance API
+import yahooFinance from 'yahoo-finance2'; // Ensure you import Yahoo Finance API
 import jwt from 'jsonwebtoken';
 import pool from '../../utils/dbconnect'; // Database connection
 
@@ -79,36 +79,4 @@ export async function POST(req) {
     }
 }
 
-// DELETE Method: Remove stock from holdings
-// export async function DELETE(req) {
-//     const authHeader = req.headers.get('authorization');
-//     const token = authHeader && authHeader.split(' ')[1];
 
-//     if (!token) {
-//         return new Response(JSON.stringify({ error: 'Authorization token missing' }), { status: 401 });
-//     }
-
-//     try {
-//         const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-//         const username = decodedToken.username;
-//         const { symbol } = await req.json(); // Assuming symbol is provided
-
-//         const curr = await pool.query('SELECT user_id from users where username = $1', [username]);
-//         if (curr.rowCount === 0) {
-//             return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
-//         }
-
-//         const result = await pool.query(
-//             'DELETE FROM holdings WHERE user_id = $1 AND symbol = $2',
-//             [curr.rows[0].user_id, symbol]
-//         );
-
-//         if (result.rowCount === 0) {
-//             return new Response(JSON.stringify({ error: 'Stock not found in holdings' }), { status: 404 });
-//         }
-
-//         return new Response(JSON.stringify({ message: 'Stock removed from holdings' }), { status: 200 });
-//     } catch (error) {
-//         return new Response(JSON.stringify({ error: 'Error removing stock from holdings' }), { status: 500 });
-//     }
-// }

@@ -137,7 +137,7 @@ export default function RegisterPage() {
       {/* Right Side - Image */}
       <div className="hidden lg:block w-1/2 h-screen">
         <img
-          src="/LandingPage.jpg"
+          src="/img1.jpg"
           alt="StockSavvy Registration"
           className="object-cover w-full h-full"
         />
