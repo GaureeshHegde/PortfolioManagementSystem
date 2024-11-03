@@ -91,7 +91,7 @@ export default function LoginPage() {
           console.log("Login successful, token:", data.token) // Log success
           localStorage.setItem("token", data.token)
           showAlert("Login successful!")
-          window.location.href = "/watchlist"
+          window.location.href = "/dashboard"
         } else {
           console.error("Login failed", data) // Log any failure response
           showAlert(data.message || "Login failed. Please try again.")
