@@ -1,59 +1,67 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { ArrowDownIcon, ArrowUpIcon, PlusIcon, TrashIcon } from "lucide-react";
-import { toast } from "react-hot-toast";
-
+import React, { useState, useEffect } from "react"
+import { ArrowDownIcon, ArrowUpIcon, PlusIcon, TrashIcon, SearchIcon } from "lucide-react"
+import { toast } from "react-hot-toast"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 const WatchlistPage = () => {
-  const [watchlist, setWatchlist] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [loggedInUserId, setLoggedInUserId] = useState(null);
-  const [selectedStock, setSelectedStock] = useState(null); // For holding the stock details for the modal
-  const [showModal, setShowModal] = useState(false); // For controlling modal visibility
+  const [watchlist, setWatchlist] = useState([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState([])
+  const [loggedInUserId, setLoggedInUserId] = useState(null)
+  const [selectedStock, setSelectedStock] = useState(null)
+  const [showModal, setShowModal] = useState(false)
 
+  const StockDetailsDialog = async (symbol) => {
+    const token = localStorage.getItem("token")
+    try {
+      const response = await fetch(`/api/stocks?symbol=${encodeURIComponent(symbol)}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
 
-// Fetch stock details when a stock is clicked
-const StockDetailsDialog = async (symbol) => {
-  const token = localStorage.getItem("token");
-  try {
-    const response = await fetch(`/api/stocks?symbol=${encodeURIComponent(symbol)}`, { // Use the stocks API to get detailed info
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    // If the response is OK, we fetch the JSON response
-    // and update the selectedStock state with the fetched data
-    // and set showModal to true to show the modal with the stock details
-    if (response.ok) {
-      const stockDetails = await response.json();
-      setSelectedStock(stockDetails);
-      setShowModal(true); 
-    } else {
-      const error = await response.json();
-      toast.error(`Error fetching stock details: ${error.message}`);
+      if (response.ok) {
+        const stockDetails = await response.json()
+        setSelectedStock(stockDetails)
+        setShowModal(true)
+      } else {
+        const error = await response.json()
+        toast.error(`Error fetching stock details: ${error.message}`)
+      }
+    } catch (error) {
+      toast.error("Error fetching stock details.")
     }
-  } catch (error) {
-    toast.error("Error fetching stock details.");
   }
-};
 
-const handleSelectStock = (symbol) => {
-  StockDetailsDialog(symbol); // Call the StockDetailsDialog with the selected symbol
-};
-
-const handleCloseModal = () => {
-  setSelectedStock(null); // Clear selected stock
-  setShowModal(false); // Close the modal
-};
+  const handleCloseModal = () => {
+    setSelectedStock(null)
+    setShowModal(false)
+  }
 
   useEffect(() => {
     // Validate token with the API
     const validateToken = async () => {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token")
 
       if (token) {
         // POST /api/validate with the token
@@ -63,122 +71,76 @@ const handleCloseModal = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ token }),
-        });
+        })
 
-        // If the response is OK, we get the JSON response
-        // which contains the user ID if the token is valid
-        const data = await response.json();
+        const data = await response.json()
 
         if (data.success) {
-          // If the token is valid, we set the user ID in state
-          // and fetch the user's watchlist (which requires a valid token)
-          setLoggedInUserId(data.id);
-          fetchUserWatchlist();
+          setLoggedInUserId(data.id)
+          fetchUserWatchlist()
         } else {
-          // If the token is invalid, we show an error message
-          toast.error(data.message);
+          toast.error(data.message)
         }
       } else {
-        // If there is no token in local storage, we show an error message
-        toast.error("No token found, please log in");
+        toast.error("No token found, please log in")
       }
-    };
+    }
 
-    validateToken();
-  }, []);
+    validateToken()
+  }, [])
 
-  /**
-   * Fetches the user's watchlist from the /api/watchlist API.
-   * This API requires a valid token in the Authorization header.
-   * If the response is OK, the watchlist data is stored in the component state.
-   * If the response is not OK, an error message is shown to the user.
-   */
   const fetchUserWatchlist = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token")
       const response = await fetch("/api/watchlist", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      });
+      })
 
       if (response.ok) {
-        const watchlistData = await response.json();
-        setWatchlist(watchlistData.data);
+        const watchlistData = await response.json()
+        setWatchlist(watchlistData.data)
       } else {
-        const error = await response.json();
-        toast.error(`Failed to load watchlist: ${error.message}`);
+        const error = await response.json()
+        toast.error(`Failed to load watchlist: ${error.message}`)
       }
     } catch (error) {
-      toast.error("Error fetching watchlist.");
+      toast.error("Error fetching watchlist.")
     }
-  };
+  }
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
-      toast.error("Please enter a stock symbol.");
-      return;
+      toast.error("Please enter a stock symbol.")
+      return
     }
-  
-    const token = localStorage.getItem("token");
-  
+
+    const token = localStorage.getItem("token")
     try {
       const response = await fetch(`/api/stocks?symbol=${searchQuery.trim()}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      });
-  
-      if (!response.ok) {
-        const error = await response.json();
-        toast.error(`Error: ${error.message || "Unable to fetch stock data"}`);
-        return;
-      }
-  
-      const stockData = await response.json();
-  
-      // Check if the stock already exists in searchResults
-      const isDuplicate = searchResults.some(
-        (stock) => stock.symbol === stockData.symbol
-      );
-  
-      if (isDuplicate) {
-        toast.error("This stock is already in your search results.");
-        return;
-      }
-  
-      setSearchResults([...searchResults, stockData]); // Add stock to searchResults if it's not a duplicate
-  
-      // Call StockDetailsDialog when a stock is clicked from search results
-      // handleSelectStock(stockData.symbol);
-    } catch (error) {
-      toast.error("An error occurred while searching for the stock.");
-    }
-  };
+      })
 
-  /**
-   * Adds a stock to the user's watchlist by calling the /api/watchlist POST API.
-   * The API requires a valid token in the Authorization header.
-   * We pass the stock object as a parameter to the API so that the API can store
-   * the stock data in the user's watchlist in the database.
-   * If the API response is OK, we update the watchlist state by adding the new
-   * stock to the existing watchlist array.
-   * If the API response is not OK, we show an error message to the user.
-   * @param {object} stock The stock object to be added to the watchlist
-   */
-  const addToWatchlist = async (stock) => {
-    // Check if the stock is already in the watchlist
-    const isDuplicate = watchlist.some((item) => item.symbol === stock.symbol);
-  
-    if (isDuplicate) {
-      toast.error(`${stock.symbol} is already in your watchlist.`);
-      return;
+      if (!response.ok) {
+        const error = await response.json()
+        toast.error(`Error: ${error.message || "Unable to fetch stock data"}`)
+        return
+      }
+
+      const stockData = await response.json()
+      setSearchResults([...searchResults, stockData])
+    } catch (error) {
+      toast.error("An error occurred while searching for the stock.")
     }
-  
-    const token = localStorage.getItem("token");
-    
+  }
+
+  const addToWatchlist = async (stock) => {
+    const token = localStorage.getItem("token")
     try {
       const response = await fetch("/api/watchlist", {
         method: "POST",
@@ -187,104 +149,90 @@ const handleCloseModal = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(stock),
-      });
-  
+      })
+
       if (response.ok) {
-        // We spread the existing watchlist array and add the new stock to it
-        // We use the spread operator (...) to create a new array with the
-        // existing elements and the new stock
-        setWatchlist([...watchlist, stock]);
-        toast.success(`${stock.symbol} added to your watchlist.`);
+        setWatchlist([...watchlist, stock])
+        toast.success(`${stock.symbol} added to your watchlist.`)
       } else {
-        const error = await response.json();
-        toast.error(`Failed to add stock: ${error.message}`);
+        const error = await response.json()
+        toast.error(`Failed to add stock: ${error.message}`)
       }
     } catch (error) {
-      toast.error("Error adding stock to watchlist.");
+      toast.error("Error adding stock to watchlist.")
     }
-  };
-  
-  
+  }
+
   const removeFromWatchlist = async (symbol) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token")
     try {
       const response = await fetch(`/api/watchlist?symbol=${symbol}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      });
+      })
 
       if (response.ok) {
-        // We filter the watchlist array to remove the stock with the given symbol
-        // We use the filter() method to create a new array with all the elements
-        // that do not match the given symbol
-        // We update the watchlist state with the new filtered array
-        setWatchlist(watchlist.filter((stock) => stock.symbol !== symbol));
-        toast.success(`${symbol} removed from your watchlist.`);
+        setWatchlist(watchlist.filter((stock) => stock.symbol !== symbol))
+        toast.success(`${symbol} removed from your watchlist.`)
       } else {
-        const error = await response.json();
-        toast.error(`Failed to remove stock: ${error.message}`);
+        const error = await response.json()
+        toast.error(`Failed to remove stock: ${error.message}`)
       }
     } catch (error) {
-      toast.error("Error removing stock from watchlist.");
+      toast.error("Error removing stock from watchlist.")
     }
-  };
-
-  const handleStockSelect = (stock) => {
-    setSelectedStock(stock);
-  };
+  }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Your Watchlist</h1>
-  
-      {/* Search section */}
-      <div className="card bg-base-100 shadow-lg mb-6">
-        <div className="card-body">
-          <h2 className="card-title">Search Stocks</h2>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Search by symbol"
-              className="input input-bordered w-full"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-            />
-            <button className="btn btn-primary" onClick={handleSearch}>
-              Search
-            </button>
-          </div>
-  
-          {/* Search Results Table */}
-          {/* searchResults is an array of stock objects that are fetched from the API when the user searches for a stock. 
-          The array is initially empty and gets populated when the user searches for a stock.
-          Each stock object in the array has the following properties: symbol, name, price, change */}
-          {searchResults.length > 0 && (
-            <div className="overflow-x-auto mt-4">
-              <table className="table w-full">
-                <thead>
-                  <tr>
-                    <th>Symbol</th>
-                    <th>Name</th>
-                    <th className="text-right">Price</th>
-                    <th className="text-right">Change</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
+    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-b from-[#001f3f] to-black text-white">
+      <div className="container mx-auto p-4 space-y-6">
+        <h1 className="text-3xl font-bold text-[#4ac1ff]">Your Watchlist</h1>
+
+        <Card className="bg-[#0a2a4d] border-[#4ac1ff] border">
+          <CardHeader>
+            <CardTitle className="text-[#4ac1ff]">Search Stocks</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2">
+              <Input
+                type="text"
+                placeholder="Search by symbol"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                className="bg-[#001f3f] text-white border-[#4ac1ff] placeholder-gray-400"
+              />
+              <Button onClick={handleSearch} className="bg-[#4ac1ff] text-[#001f3f] hover:bg-[#39a0e5]">
+                <SearchIcon className="h-4 w-4 mr-2" />
+                Search
+              </Button>
+            </div>
+
+            {searchResults.length > 0 && (
+              <Table className="mt-4">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-[#4ac1ff]">Symbol</TableHead>
+                    <TableHead className="text-[#4ac1ff]">Name</TableHead>
+                    <TableHead className="text-right text-[#4ac1ff]">Price</TableHead>
+                    <TableHead className="text-right text-[#4ac1ff]">Change</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {searchResults.map((stock) => (
-                    <tr
+                    <TableRow
                       key={stock.symbol}
-                      onClick={() => StockDetailsDialog(stock.symbol)} // Call with symbol
-                      className="cursor-pointer hover:bg-gray-100"
+                      onClick={() => StockDetailsDialog(stock.symbol)}
+                      className="cursor-pointer hover:bg-[#001f3f]"
                     >
-                      <td>{stock.symbol}</td>
-                      <td>{stock.name}</td>
-                      <td className="text-right">${stock.price}</td>
-                      <td className="text-right">
-                        <span className={stock.change >= 0 ? "text-green-600" : "text-red-600"}>
+                      <TableCell className="font-medium">{stock.symbol}</TableCell>
+                      <TableCell>{stock.name}</TableCell>
+                      <TableCell className="text-right">${stock.price.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">
+                        <span className={stock.change >= 0 ? "text-green-400" : "text-red-400"}>
                           {stock.change >= 0 ? (
                             <ArrowUpIcon className="inline h-4 w-4" />
                           ) : (
@@ -292,58 +240,59 @@ const handleCloseModal = () => {
                           )}
                           {Math.abs(stock.change)}%
                         </span>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-outline btn-sm"
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={(e) => {
-                            e.stopPropagation();
-                            addToWatchlist(stock);
+                            e.stopPropagation()
+                            addToWatchlist(stock)
                           }}
+                          className="border-[#4ac1ff] text-[#4ac1ff] hover:bg-[#4ac1ff] hover:text-[#001f3f]"
                         >
                           <PlusIcon className="h-4 w-4 mr-2" />
                           Add
-                        </button>
-                      </td>
-                    </tr>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-  
-      {/* Watchlist Table */}
-      <div className="card bg-base-100 shadow-lg">
-        <div className="card-body">
-          <h2 className="card-title">Your Watchlist</h2>
-          {watchlist.length === 0 ? (
-            <p className="text-center text-muted">Your watchlist is empty. Search for stocks to add them.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="table w-full">
-                <thead>
-                  <tr>
-                    <th>Symbol</th>
-                    <th>Name</th>
-                    <th className="text-right">Price</th>
-                    <th className="text-right">Change</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#0a2a4d] border-[#4ac1ff] border">
+          <CardHeader>
+            <CardTitle className="text-[#4ac1ff]">Your Watchlist</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {watchlist.length === 0 ? (
+              <p className="text-center text-gray-400">Your watchlist is empty. Search for stocks to add them.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-[#4ac1ff]">Symbol</TableHead>
+                    <TableHead className="text-[#4ac1ff]">Name</TableHead>
+                    <TableHead className="text-right text-[#4ac1ff]">Price</TableHead>
+                    <TableHead className="text-right text-[#4ac1ff]">Change</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {watchlist.map((stock) => (
-                    <tr
+                    <TableRow
                       key={stock.symbol}
-                      onClick={() => StockDetailsDialog(stock.symbol)} // Call with symbol
-                      className="cursor-pointer hover:bg-gray-100"
+                      onClick={() => StockDetailsDialog(stock.symbol)}
+                      className="cursor-pointer hover:bg-[#001f3f]"
                     >
-                      <td>{stock.symbol}</td>
-                      <td>{stock.name}</td>
-                      <td className="text-right">${stock.price}</td>
-                      <td className="text-right">
-                        <span className={stock.change >= 0 ? "text-green-600" : "text-red-600"}>
+                      <TableCell className="font-medium">{stock.symbol}</TableCell>
+                      <TableCell>{stock.name}</TableCell>
+                      <TableCell className="text-right">${stock.price?.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">
+                        <span className={stock.change >= 0 ? "text-green-400" : "text-red-400"}>
                           {stock.change >= 0 ? (
                             <ArrowUpIcon className="inline h-4 w-4" />
                           ) : (
@@ -351,66 +300,66 @@ const handleCloseModal = () => {
                           )}
                           {Math.abs(stock.change)}%
                         </span>
-                      </td>
-                      <td>
-                        <button className="btn btn-outline btn-sm btn-error" onClick={() => removeFromWatchlist(stock.symbol)}>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            removeFromWatchlist(stock.symbol)
+                          }}
+                          className="border-[#4ac1ff] text-[#4ac1ff] hover:bg-[#4ac1ff] hover:text-[#001f3f]"
+                        >
                           <TrashIcon className="h-4 w-4 mr-2" />
                           Remove
-                        </button>
-                      </td>
-                    </tr>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-  
-      {/* Stock Details Dialog */}
-{showModal && (
-  <dialog open className="modal modal-bottom sm:modal-middle">
-    <form method="dialog" className="modal-box">
-      <h3 className="font-bold text-lg">
-        {selectedStock.symbol} - {selectedStock.name || "N/A"}
-      </h3>
-      <div className="py-4">
-        <table className="table w-full">
-          <tbody>
-            <tr>
-              <th>Symbol</th>
-              <td>{selectedStock.symbol}</td>
-            </tr>
-            <tr>
-              <th>Highest Price</th>
-              <td>${selectedStock.highestPrice?.toFixed(2) || "N/A"}</td>
-            </tr>
-            <tr>
-              <th>Lowest Price</th>
-              <td>${selectedStock.lowestPrice?.toFixed(2) || "N/A"}</td>
-            </tr>
-            <tr>
-              <th>Face Value</th>
-              <td>${selectedStock.faceValue?.toFixed(2) || "N/A"}</td>
-            </tr>
-            <tr>
-              <th>PE Ratio</th>
-              <td>{selectedStock.peRatio?.toFixed(2) || "N/A"}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div className="modal-action">
-        <button className="btn" onClick={handleCloseModal}>
-          Close
-        </button>
-      </div>
-    </form>
-  </dialog>
-)}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
 
+        <Dialog open={showModal} onOpenChange={setShowModal}>
+          <DialogContent className="bg-[#0a2a4d] text-white border-[#4ac1ff]">
+            <DialogHeader>
+              <DialogTitle className="text-[#4ac1ff]">{selectedStock?.symbol} - {selectedStock?.name || "N/A"}</DialogTitle>
+            </DialogHeader>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="text-[#4ac1ff]">Symbol</TableCell>
+                  <TableCell>{selectedStock?.symbol}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-[#4ac1ff]">Highest Price</TableCell>
+                  <TableCell>${selectedStock?.highestPrice?.toFixed(2) || "N/A"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-[#4ac1ff]">Lowest Price</TableCell>
+                  <TableCell>${selectedStock?.lowestPrice?.toFixed(2) || "N/A"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-[#4ac1ff]">Face Value</TableCell>
+                  <TableCell>${selectedStock?.faceValue?.toFixed(2) || "N/A"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-[#4ac1ff]">PE Ratio</TableCell>
+                  <TableCell>{selectedStock?.peRatio?.toFixed(2) || "N/A"}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+            <DialogClose asChild>
+              <Button className="mt-4 bg-[#4ac1ff] text-[#001f3f] hover:bg-[#39a0e5]">Close</Button>
+            </DialogClose>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
-  );
-};
+  )
+}
 
-export default WatchlistPage;
+export default WatchlistPage

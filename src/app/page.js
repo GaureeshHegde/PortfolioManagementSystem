@@ -1,6 +1,5 @@
 'use client';
 
-
 import Link from 'next/link';
 import { ArrowUpIcon, BarChart2Icon, LineChartIcon, TrendingUpIcon, DollarSignIcon } from "lucide-react";
 import Image from "next/image";
