@@ -1,0 +1,72 @@
+----CREATING THE TRIGGER FUNCTION
+
+CREATE OR REPLACE FUNCTION update_holdings_on_order()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Check if the order is a "buy"
+    IF NEW.type = 'buy' THEN
+        -- Check if the stock already exists in holdings
+        PERFORM 1 FROM holdings WHERE user_id = NEW.user_id AND symbol = NEW.symbol;
+        IF FOUND THEN
+            -- If it exists, update the quantity and value
+            UPDATE holdings
+            SET quantity = quantity + NEW.quantity,
+                value = (quantity + NEW.quantity) * NEW.price -- Correct value calculation here
+            WHERE user_id = NEW.user_id AND symbol = NEW.symbol;
+        ELSE
+            -- If it doesn't exist, insert a new row
+            INSERT INTO holdings (user_id, symbol, name, quantity, value)
+            VALUES (NEW.user_id, NEW.symbol, NEW.name, NEW.quantity, NEW.quantity * NEW.price);
+        END IF;
+
+    -- Check if the order is a "sell"
+    ELSIF NEW.type = 'sell' THEN
+        -- Update the existing stock quantity and value in holdings
+        UPDATE holdings
+        SET quantity = quantity - NEW.quantity,
+            value = (quantity - NEW.quantity) * NEW.price -- Correct value calculation here
+        WHERE user_id = NEW.user_id AND symbol = NEW.symbol;
+
+        -- Optionally, delete the row if quantity drops to 0
+        DELETE FROM holdings
+        WHERE user_id = NEW.user_id AND symbol = NEW.symbol AND quantity <= 0;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+----CREATING THE TRIGGER
+CREATE TRIGGER order_cascade_trigger
+AFTER INSERT ON order_history
+FOR EACH ROW
+EXECUTE FUNCTION update_holdings_on_order();
+
+
+
+
+----CREATING THE ORDERS TABLE
+
+CREATE TABLE order_history (
+    order_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(user_id) ON DELETE CASCADE, -- Foreign key from users table
+    symbol VARCHAR(10) NOT NULL,
+    quantity INT CHECK (quantity > 0), -- No negative or zero quantity in orders
+    type VARCHAR(4) CHECK (type IN ('buy', 'sell')), -- Constraint for buy/sell type
+    date_of_order TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+----CREATING THE HOLDINGS TABLE
+
+CREATE TABLE holdings (
+    user_id INT REFERENCES users(user_id) ON DELETE CASCADE, -- Foreign key from users table
+    symbol VARCHAR(10) NOT NULL,
+    name VARCHAR(100),
+    quantity INT CHECK (quantity >= 0), -- No negative quantities
+    price_change DECIMAL(5, 2), -- Percentage change in price
+    value DECIMAL(12, 2), -- Total value of the holding
+
+    PRIMARY KEY (user_id, symbol) -- Composite primary key for uniqueness per user and stock
+);

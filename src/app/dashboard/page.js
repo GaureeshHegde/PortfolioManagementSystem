@@ -2,34 +2,57 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { TrendingUpIcon, NewspaperIcon, DollarSignIcon, SearchIcon } from "lucide-react"
+import { TrendingUpIcon, NewspaperIcon, DollarSignIcon } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function UserDashboard() {
-  const [searchTerm, setSearchTerm] = useState("")
   const [newsArticles, setNewsArticles] = useState([])
+  const [portfolioValue, setPortfolioValue] = useState(null)
+  const [marketOverview, setMarketOverview] = useState(null)
 
+  // Fetch market overview and portfolio value
   useEffect(() => {
-    async function fetchNews() {
+    async function fetchMarketData() {
       try {
-        const response = await fetch('/api/getNews') // Ensure the correct endpoint
-        if (!response.ok) throw new Error("Failed to fetch news data.")
-        
-        const data = await response.json()
-        setNewsArticles(data.articles || []) // Adjust according to the actual data structure
+        // Market Overview data
+        const marketResponse = await fetch("/api/dashboard/marketOverview")
+        if (!marketResponse.ok) throw new Error("Failed to fetch market overview data.")
+        const marketData = await marketResponse.json()
+        setMarketOverview(marketData)
+
+        // Portfolio Value data
+        const portfolioResponse = await fetch("/api/dashboard/totalPortfolioValue")
+        if (!portfolioResponse.ok) throw new Error("Failed to fetch portfolio value data.")
+        const portfolioData = await portfolioResponse.json()
+        setPortfolioValue(portfolioData.value)
       } catch (error) {
-        console.error("Error fetching news:", error)
+        console.error("Error fetching market or portfolio data:", error)
       }
     }
 
-    fetchNews()
+    fetchMarketData()
   }, [])
 
-  const filteredNews = newsArticles.filter((article) =>
-    article.title.toLowerCase().includes(searchTerm.toLowerCase())
-  ).slice(0, 5) // Limit to 5 articles
+  // Fetch top news articles
+  useEffect(() => {
+    async function fetchNews() {
+        try {
+            const response = await fetch("/api/dashboard/getNews") // Fetch from the backend
+            if (!response.ok) throw new Error("Failed to fetch news data.")
+            
+            const data = await response.json();
+            console.log('News data from API:', data);  // Log the fetched data
+
+            setNewsArticles(data.articles || []); // Adjust according to the actual data structure
+        } catch (error) {
+            console.error("Error fetching news:", error);
+        }
+    }
+
+    fetchNews()
+}, [])
+
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-b from-[#001f3f] to-black text-white">
@@ -46,7 +69,9 @@ export default function UserDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              {/* Market overview content here */}
+              <p className="text-white">
+                {marketOverview ? marketOverview.summary : "Loading market overview..."}
+              </p>
             </CardContent>
           </Card>
 
@@ -59,7 +84,9 @@ export default function UserDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              {/* Portfolio value content here */}
+              <p className="text-white">
+                {portfolioValue ? `$${portfolioValue.toFixed(2)}` : "Loading portfolio value..."}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -71,30 +98,23 @@ export default function UserDashboard() {
             <CardDescription className="text-gray-400">Stay updated with the latest market news</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2 my-4">
-              <Input
-                type="text"
-                placeholder="Search news..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-[#001f3f] text-white border-[#4ac1ff] placeholder-gray-400"
-              />
-              <Button variant="outline" className="border-[#4ac1ff] text-[#4ac1ff] hover:bg-[#4ac1ff] hover:text-[#001f3f]">
-                <SearchIcon className="h-5 w-5" />
-              </Button>
-            </div>
             <ScrollArea className="h-96 w-full">
-              {filteredNews.map((article) => (
-                <div key={article.id} className="mb-4 last:mb-0">
-                  <h3 className="text-lg font-semibold text-white">{article.title}</h3>
-                  <div className="flex items-center mt-1 text-sm text-gray-400">
-                    <NewspaperIcon className="h-4 w-4 mr-2" />
-                    <span>{article.source}</span>
-                    <span className="mx-2">•</span>
-                    <span>{article.time}</span>
+              {newsArticles.length === 0 ? (
+                <p className="text-white">No news available at the moment.</p>
+              ) : (
+                newsArticles.map((article, index) => (
+                  <div key={index} className="mb-4 last:mb-0">
+                    <h3 className="text-lg font-semibold text-white">{article.title}</h3>
+                    <div className="flex items-center mt-1 text-sm text-gray-400">
+                      <NewspaperIcon className="h-4 w-4 mr-2" />
+                      <span>{article.source}</span>
+                      <span className="mx-2">•</span>
+                      <span>{article.time}</span>
+                    </div>
+                    <p className="text-gray-300">{article.summary || "No summary available."}</p>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </ScrollArea>
           </CardContent>
         </Card>

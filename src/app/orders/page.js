@@ -1,14 +1,14 @@
 "use client"
 
-import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { toast } from "react-hot-toast"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { useEffect, useState } from "react"; // Import useEffect
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { toast } from "react-hot-toast";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Form,
   FormControl,
@@ -17,7 +17,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
+} from "@/components/ui/form";
 import {
   Table,
   TableBody,
@@ -25,32 +25,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 
+// Define the validation schema for the form
 const formSchema = z.object({
-  stockSymbol: z
-    .string()
-    .min(1, { message: "Stock symbol is required" })
-    .max(5, { message: "Stock symbol must be 5 characters or less" })
-    .toUpperCase(),
-  quantity: z
-    .number()
-    .min(1, { message: "Quantity must be at least 1" })
-    .max(10000, { message: "Quantity must be 10,000 or less" }),
-  action: z.enum(["buy", "sell"], {
-    required_error: "You need to select an action",
-  }),
-})
-
-const initialOrders = [
-  { id: 1, symbol: "AAPL", quantity: 10, type: "Buy", date: "2023-06-01T10:30:00Z" },
-  { id: 2, symbol: "GOOGL", quantity: 5, type: "Sell", date: "2023-06-02T14:45:00Z" },
-  { id: 3, symbol: "MSFT", quantity: 15, type: "Buy", date: "2023-06-03T09:15:00Z" },
-]
+  stockSymbol: z.string().min(1, "Stock symbol is required"), // Add validation for stock symbol
+  quantity: z.number().min(1, "Quantity must be at least 1"), // Validate quantity
+  action: z.enum(["buy", "sell"]), // Ensure action is either 'buy' or 'sell'
+});
 
 export default function OrdersPage() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [orders, setOrders] = useState(initialOrders)
+  const [isLoading, setIsLoading] = useState(false);
+  const [orders, setOrders] = useState([]); // Start with an empty array
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -59,31 +45,78 @@ export default function OrdersPage() {
       quantity: 1,
       action: "buy",
     },
-  })
+  });
 
-  const { control, handleSubmit, formState: { errors }, reset } = form
+  const { control, handleSubmit, formState: { errors }, reset } = form;
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch('/api/orders', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`, // Assuming you're storing the JWT token in local storage
+          },
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch orders');
+        }
+
+        const data = await response.json();
+        setOrders(data.data); // Adjust based on the structure of your response
+      } catch (error) {
+        toast.error("Error fetching orders: " + error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []); // Empty dependency array means this runs once when the component mounts
 
   async function onSubmit(values) {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const newOrder = {
-        id: orders.length + 1,
-        symbol: values.stockSymbol,
-        quantity: values.quantity,
-        type: values.action === "buy" ? "Buy" : "Sell",
-        date: new Date().toISOString(),
+      const response = await fetch('/api/orders', { // Make sure this is the correct endpoint for your POST request
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`, // Assuming you're storing the JWT token in local storage
+        },
+        body: JSON.stringify({
+          symbol: values.stockSymbol.toUpperCase(), // Send stock symbol in uppercase
+          quantity: values.quantity,
+          order_type: values.action.toLowerCase(), // Send order type as 'buy' or 'sell'
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Something went wrong');
       }
-      setOrders([newOrder, ...orders])
-      toast.success(`${values.action === "buy" ? "Bought" : "Sold"} ${values.quantity} shares of ${values.stockSymbol}`)
-      reset()
+
+      const orderData = await response.json();
+      const newOrder = {
+        symbol: orderData.order.symbol,
+        quantity: orderData.order.quantity,
+        type: orderData.order.order_type, // Ensure this matches your backend
+        date: orderData.order.date_of_order, // Use the createdAt from backend
+      };
+
+      setOrders([newOrder, ...orders]); // Update local state with new order
+      toast.success(`${values.action === "buy" ? "Bought" : "Sold"} ${values.quantity} shares of ${values.stockSymbol}`);
+      reset();
     } catch (error) {
-      console.error("Error Executing Trade:", error)
-      toast.error("There was a problem executing your trade. Please try again.")
+      console.error("Error Executing Trade:", error);
+      toast.error("There was a problem executing your trade. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
-  
+
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-b from-[#001f3f] to-black text-white p-4">
       <div className="container mx-auto">
@@ -148,20 +181,20 @@ export default function OrdersPage() {
                         <FormControl>
                           <RadioGroup
                             onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            value={field.value}
                             className="flex space-x-4"
                           >
                             <FormItem className="flex items-center space-x-3 space-y-0">
                               <FormControl>
                                 <RadioGroupItem value="buy" className="border-[#4ac1ff] text-[#4ac1ff]" />
                               </FormControl>
-                              <FormLabel className="font-normal text-white">Buy</FormLabel>
+                              <label>Buy</label>
                             </FormItem>
                             <FormItem className="flex items-center space-x-3 space-y-0">
                               <FormControl>
                                 <RadioGroupItem value="sell" className="border-[#4ac1ff] text-[#4ac1ff]" />
                               </FormControl>
-                              <FormLabel className="font-normal text-white">Sell</FormLabel>
+                              <label>Sell</label>
                             </FormItem>
                           </RadioGroup>
                         </FormControl>
@@ -169,48 +202,55 @@ export default function OrdersPage() {
                       </FormItem>
                     )}
                   />
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-[#4ac1ff] text-[#001f3f] hover:bg-[#39a0e5]"
-                    disabled={isLoading}
-                  >
+                  <Button type="submit" disabled={isLoading} className="bg-[#4ac1ff] hover:bg-[#0093db]">
                     {isLoading ? "Processing..." : "Place Order"}
                   </Button>
                 </form>
               </Form>
             </CardContent>
           </Card>
-
           <Card className="bg-[#0a2a4d] border-[#4ac1ff] border shadow-xl">
             <CardHeader>
               <CardTitle className="text-[#4ac1ff]">Order History</CardTitle>
-              <CardDescription className="text-gray-300">Your recent trading activity</CardDescription>
+              <CardDescription className="text-gray-300">Your recent trades will be displayed here.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-[#4ac1ff]">Symbol</TableHead>
-                    <TableHead className="text-[#4ac1ff]">Quantity</TableHead>
-                    <TableHead className="text-[#4ac1ff]">Type</TableHead>
-                    <TableHead className="text-[#4ac1ff]">Date</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {orders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-medium">{order.symbol}</TableCell>
-                      <TableCell>{order.quantity}</TableCell>
-                      <TableCell>{order.type}</TableCell>
-                      <TableCell>{new Date(order.date).toLocaleString()}</TableCell>
+              {isLoading ? (
+                <p>Loading orders...</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-[#4ac1ff]">Stock Symbol</TableHead>
+                      <TableHead className="text-[#4ac1ff]">Quantity</TableHead>
+                      <TableHead className="text-[#4ac1ff]">Type</TableHead>
+                      <TableHead className="text-[#4ac1ff]">Date</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {orders.length > 0 ? (
+                      orders.map((order) => (
+                        <TableRow key={order.id}>
+                          <TableCell>{order.symbol}</TableCell>
+                          <TableCell>{order.quantity}</TableCell>
+                          <TableCell>{order.type || "N/A"}</TableCell>
+                          <TableCell>
+                          {order.date_of_order ? new Date(order.date_of_order).toLocaleString() : "Invalid Date"}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center">No orders found</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
     </div>
-  )
+  );
 }

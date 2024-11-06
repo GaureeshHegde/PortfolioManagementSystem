@@ -5,40 +5,45 @@ import yahooFinance from 'yahoo-finance2'; // Add Yahoo Finance API
 
 // Fetch user's watchlist and include stock data from Yahoo Finance API
 export async function GET(req) {
-    // Get the Authorization header from the request headers
     const authHeader = req.headers.get('authorization');
     const token = authHeader && authHeader.split(' ')[1];
+
     if (!token) {
-      return new Response(JSON.stringify({ error: 'Authorization token missing' }), { status: 401 });
-  }
+        return new Response(JSON.stringify({ error: 'Authorization token missing' }), { status: 401 });
+    }
 
-  try {
-    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-    const username = decodedToken.username;
+    try {
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+        const username = decodedToken.username;
 
-    const curr = await pool.query('SELECT user_id FROM users WHERE username = $1', [username]);
+        // Query the user_id based on username
+        const curr = await pool.query('SELECT user_id FROM users WHERE username = $1', [username]);
         const result = await pool.query('SELECT symbol FROM watchlist WHERE user_id = $1', [curr.rows[0].user_id]);
+
         // Fetch stock data from Yahoo Finance API for each symbol in the watchlist
         const stockDataPromises = result.rows.map(async (row) => {
             const stockData = await yahooFinance.quote(row.symbol);
             return {
                 symbol: stockData.symbol,
-                name: stockData.longName || stockData.shortName || row.symbol, // Added stock name
+                name: stockData.longName || stockData.shortName || row.symbol,
                 price: stockData.regularMarketPrice,
                 change: stockData.regularMarketChangePercent,
-                highestPrice: stockData.fiftyTwoWeekHigh, // Highest price over the last year
-                lowestPrice: stockData.fiftyTwoWeekLow,   // Lowest price over the last year
-                faceValue: stockData.priceToBook,         // Placeholder for face value (replace if needed)
-                peRatio: stockData.trailingPE,            // PE ratio
+                highestPrice: stockData.fiftyTwoWeekHigh,
+                lowestPrice: stockData.fiftyTwoWeekLow,
+                faceValue: stockData.priceToBook,
+                peRatio: stockData.trailingPE,
             };
         });
         const stockData = await Promise.all(stockDataPromises);
+
         return NextResponse.json({ data: stockData, status: 200 });
+
     } catch (error) {
-      console.error('Error fetching stock data:', error);
+        console.error('Error fetching stock data:', error);
         return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
     }
 }
+
 
 export async function POST(req) {
   const authHeader = req.headers.get('authorization');
