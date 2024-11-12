@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import withAuth from "../components/withAuth";
 
 const WatchlistPage = () => {
   const [watchlist, setWatchlist] = useState([])
@@ -362,4 +363,4 @@ const WatchlistPage = () => {
   )
 }
 
-export default WatchlistPage
+export default withAuth(WatchlistPage); // Use withAuth to protect the WatchlistPage;

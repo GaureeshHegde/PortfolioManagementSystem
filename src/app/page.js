@@ -101,12 +101,11 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <button className="bg-[#4ac1ff] text-white hover:bg-[#39a0e5] font-bold py-2 px-4 rounded-lg" size="lg">
-                    Start Free Trial
-                  </button>
-                  <button className="border-2 border-[#4ac1ff] text-[#4ac1ff] hover:bg-[#001f3f] hover:text-white font-bold py-2 px-4 rounded-lg" size="lg">
-                    Watch Demo
-                  </button>
+                  <Link href="/register">
+                    <button className="border-2 border-[#4ac1ff] text-[#4ac1ff] hover:bg-[#001f3f] hover:text-white font-bold py-2 px-4 rounded-lg" size="lg">
+                      Sign up for Free!
+                    </button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -121,11 +120,6 @@ export default function LandingPage() {
               Take control of your financial future. Join thousands of investors who trust StockSavvy for smarter portfolio management.
             </p>
             <div className="flex justify-center gap-4">
-              <Link href="/register">
-                <button className="bg-[#4ac1ff] hover:bg-[#39a0e5] text-white font-bold py-3 px-8 rounded-lg text-lg">
-                  Sign Up for Free
-                </button>
-              </Link>
               <Link href="/faqs">
                 <button className="border-2 border-[#4ac1ff] text-[#4ac1ff] hover:bg-[#001f3f] hover:text-white font-bold py-3 px-8 rounded-lg text-lg">
                   Learn More

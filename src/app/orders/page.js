@@ -1,5 +1,6 @@
 "use client"
 
+import withAuth from "../components/withAuth";
 import { useEffect, useState } from "react"; // Import useEffect
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,7 +35,7 @@ const formSchema = z.object({
   action: z.enum(["buy", "sell"]), // Ensure action is either 'buy' or 'sell'
 });
 
-export default function OrdersPage() {
+function OrdersPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [orders, setOrders] = useState([]); // Start with an empty array
 
@@ -254,3 +255,5 @@ export default function OrdersPage() {
     </div>
   );
 }
+
+export default withAuth(OrdersPage);

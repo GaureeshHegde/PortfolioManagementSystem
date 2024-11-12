@@ -5,12 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { TrendingUpIcon, NewspaperIcon, DollarSignIcon } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import withAuth from "../components/withAuth.js"
 
-export default function UserDashboard() {
+function UserDashboard() {
   const [newsArticles, setNewsArticles] = useState([])
   const [portfolioValue, setPortfolioValue] = useState(null)
   const [marketOverview, setMarketOverview] = useState(null)
-
+  const token = localStorage.getItem("token")
+  console.log("Token is:", token)
   // Fetch market overview and portfolio value
   useEffect(() => {
     async function fetchMarketData() {
@@ -122,3 +124,5 @@ export default function UserDashboard() {
     </div>
   )
 }
+
+export default withAuth(UserDashboard);
