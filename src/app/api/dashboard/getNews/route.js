@@ -8,7 +8,6 @@ export async function GET(req) {
         );
 
         const newsData = await response.json();
-        
         // Check if the response contains an error field
         if (newsData?.error) {
             return new Response(JSON.stringify({ error: 'Error fetching news' }), { status: 500 });
@@ -20,7 +19,6 @@ export async function GET(req) {
             description: item.summary,
             url: item.url,
         }));
-
         return new Response(JSON.stringify({ newsSnippets }), { status: 200 });
     } catch (error) {
         console.error('Error fetching news:', error);

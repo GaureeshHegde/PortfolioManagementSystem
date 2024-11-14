@@ -19,13 +19,14 @@ export default function UserDashboard() {
         const marketResponse = await fetch("/api/dashboard/marketOverview")
         if (!marketResponse.ok) throw new Error("Failed to fetch market overview data.")
         const marketData = await marketResponse.json()
-        setMarketOverview(marketData)
+        console.log(marketData)
+        setMarketOverview(marketData.marketOverview)
 
         // Portfolio Value data
-        const portfolioResponse = await fetch("/api/dashboard/totalPortfolioValue")
-        if (!portfolioResponse.ok) throw new Error("Failed to fetch portfolio value data.")
-        const portfolioData = await portfolioResponse.json()
-        setPortfolioValue(portfolioData.value)
+        // const portfolioResponse = await fetch("/api/dashboard/totalPortfolioValue")
+        // if (!portfolioResponse.ok) throw new Error("Failed to fetch portfolio value data.")
+        // const portfolioData = await portfolioResponse.json()
+        // setPortfolioValue(portfolioData.value)
       } catch (error) {
         console.error("Error fetching market or portfolio data:", error)
       }
@@ -35,23 +36,28 @@ export default function UserDashboard() {
   }, [])
 
   // Fetch top news articles
-  useEffect(() => {
-    async function fetchNews() {
-        try {
-            const response = await fetch("/api/dashboard/getNews") // Fetch from the backend
-            if (!response.ok) throw new Error("Failed to fetch news data.")
+//   useEffect(() => {
+//     // async function fetchNews() {
+//     //     try {
+//     //         const response = await fetch("/api/dashboard/getNews", {
+//     //           method: "GET",
+//     //           headers: {
+//     //             "Content-Type" : "application/json"
+//     //           }
+//     //         }) // Fetch from the backend
+//     //         // if (!response.ok) throw new Error("Failed to fetch news data.")
             
-            const data = await response.json();
-            console.log('News data from API:', data);  // Log the fetched data
+//     //         const data = await response.json();
+//     //         console.log('News data from API:', data.newsSnippets);  // Log the fetched data
 
-            setNewsArticles(data.articles || []); // Adjust according to the actual data structure
-        } catch (error) {
-            console.error("Error fetching news:", error);
-        }
-    }
+//     //         setNewsArticles(data.newsSnippets); // Adjust according to the actual data structure
+//     //     } catch (error) {
+//     //         console.error("Error fetching news:", error);
+//     //     }
+//     // }
 
-    fetchNews()
-}, [])
+//     // fetchNews()
+// }, [])
 
 
   return (
@@ -107,11 +113,11 @@ export default function UserDashboard() {
                     <h3 className="text-lg font-semibold text-white">{article.title}</h3>
                     <div className="flex items-center mt-1 text-sm text-gray-400">
                       <NewspaperIcon className="h-4 w-4 mr-2" />
-                      <span>{article.source}</span>
+                      <span>{article.description}</span>
                       <span className="mx-2">•</span>
-                      <span>{article.time}</span>
+                      <span>{article.url}</span>
                     </div>
-                    <p className="text-gray-300">{article.summary || "No summary available."}</p>
+                    {/* <p className="text-gray-300">{article.summary || "No summary available."}</p> */}
                   </div>
                 ))
               )}
