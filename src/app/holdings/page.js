@@ -12,8 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import withAuth from "../components/withAuth"
 
-export default function HoldingsPage() {
+function HoldingsPage() {
   const [holdings, setHoldings] = useState([])
   const [loggedInUserId, setLoggedInUserId] = useState(null)
 
@@ -149,3 +150,5 @@ export default function HoldingsPage() {
     </div>
   )
 }
+
+export default withAuth(HoldingsPage);

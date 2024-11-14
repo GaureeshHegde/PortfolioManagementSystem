@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import withAuth from "../components/withAuth";
 
 const WatchlistPage = () => {
   const [watchlist, setWatchlist] = useState([])
@@ -101,6 +102,7 @@ const WatchlistPage = () => {
 
       if (response.ok) {
         const watchlistData = await response.json()
+        console.log(watchlistData)
         setWatchlist(watchlistData.data)
       } else {
         const error = await response.json()
@@ -362,4 +364,4 @@ const WatchlistPage = () => {
   )
 }
 
-export default WatchlistPage
+export default withAuth(WatchlistPage); // Use withAuth to protect the WatchlistPage;

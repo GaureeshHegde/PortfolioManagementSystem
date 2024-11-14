@@ -1,5 +1,4 @@
 import '../globals.css';
-import { Toaster } from 'react-hot-toast'; // Import Toaster
 import PageNavbar from '../components/PageNavbar';
 
 

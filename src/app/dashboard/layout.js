@@ -1,6 +1,4 @@
-
 import '../globals.css';
-import { Toaster } from 'react-hot-toast'; // Import Toaster
 import PageNavbar from '../components/PageNavbar';
 
 export default function Layout({ children }) {
@@ -12,3 +10,4 @@ export default function Layout({ children }) {
             
     );
 }
+

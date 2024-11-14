@@ -1,16 +1,16 @@
-import pool from '../../utils/dbconnect'; // Database connection
+import pool from '@/app/utils/dbconnect';
 import jwt from 'jsonwebtoken';
-import yahooFinance from 'yahoo-finance2'; // For fetching stock prices
+import yahooFinance from 'yahoo-finance2';
 
 export async function GET(req) {
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-        return new Response(JSON.stringify({ error: 'Authorization token missing' }), { status: 401 });
-    }
-
     try {
+        const authHeader = req.headers.get('authorization');
+        const token = authHeader && authHeader.split(' ')[1];
+
+        if (!token) {
+            return new Response(JSON.stringify({ error: 'Authorization token missing' }), { status: 401 });
+        }
+
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
         const username = decodedToken.username;
 
@@ -53,7 +53,6 @@ export async function GET(req) {
             JSON.stringify({ totalPortfolioValue }),
             { status: 200 }
         );
-
     } catch (error) {
         console.error('Error fetching total portfolio value:', error);
         return new Response(

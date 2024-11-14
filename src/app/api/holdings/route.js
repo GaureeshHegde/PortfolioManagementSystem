@@ -22,8 +22,8 @@ export async function GET(req) {
             return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
         }
 
-        // Fetch holdings (removing value from database since we will calculate it frontend)
-        const result = await pool.query('SELECT symbol, name, quantity, price_change FROM holdings WHERE user_id = $1', [curr.rows[0].user_id]);
+        // Fetch holdings
+        const result = await pool.query('SELECT symbol, name, quantity FROM holdings WHERE user_id = $1', [curr.rows[0].user_id]);
 
         // Fetch stock data for each symbol in the holdings
         const stockDataPromises = result.rows.map(async (row) => {
@@ -32,7 +32,7 @@ export async function GET(req) {
                 symbol: row.symbol,
                 name: row.name || stockData.longName || 'Unknown',
                 quantity: row.quantity,
-                price_change: row.price_change ?? 0,
+                price_change: stockData.regularMarketChangePercent || 0, // Use DB value or Yahoo Finance percentage change
                 currentPrice: stockData.regularMarketPrice || 0,
                 change: stockData.regularMarketChangePercent || 0, // Percentage change
             };
@@ -46,8 +46,6 @@ export async function GET(req) {
         return new Response(JSON.stringify({ error: 'Failed to fetch holdings data' }), { status: 500 });
     }
 }
-
-
 
 // POST Method: Add stock to holdings
 export async function POST(req) {
@@ -83,7 +81,7 @@ export async function POST(req) {
         }
 
         const name = stockData.longName || stockData.shortName || 'Unknown Stock';
-        const price_change = stockData.regularMarketChangePercent || 0;
+        const price_change = stockData.regularMarketChangePercent || 0; // Percentage change
         const price = stockData.regularMarketPrice || 0;
         const value = price * quantity;
 
@@ -94,18 +92,18 @@ export async function POST(req) {
         );
 
         if (holdingExists.rowCount > 0) {
-            // If it exists, update quantity, price, price_change, and value
+            // If it exists, update quantity, price_change, and value
             const newQuantity = holdingExists.rows[0].quantity + quantity;
             const newValue = newQuantity * price;
             await pool.query(
-                'UPDATE holdings SET quantity = $1, price = $2, price_change = $3, value = $4 WHERE user_id = $5 AND symbol = $6',
-                [newQuantity, price, price_change, newValue, userId, symbol]
+                'UPDATE holdings SET quantity = $1, value = $2 WHERE user_id = $3 AND symbol = $4',
+                [newQuantity, newValue, userId, symbol]
             );
         } else {
             // Insert new holding with price, price_change, and value
             await pool.query(
-                'INSERT INTO holdings (user_id, symbol, name, quantity, price, price_change, value) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-                [userId, symbol, name, quantity, price, price_change, value]
+                'INSERT INTO holdings (user_id, symbol, name, quantity, value) VALUES ($1, $2, $3, $4, $5, $6)',
+                [userId, symbol, name, quantity, value]
             );
         }
 
