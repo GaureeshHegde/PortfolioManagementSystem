@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,9 +10,10 @@ import withAuth from "../components/withAuth.js"
 function UserDashboard() {
   const [newsArticles, setNewsArticles] = useState([])
   const [portfolioValue, setPortfolioValue] = useState(null)
-  const [marketOverview, setMarketOverview] = useState(null)
+  const [marketOverview, setMarketOverview] = useState([])
   const token = localStorage.getItem("token")
   console.log("Token is:", token)
+
   // Fetch market overview and portfolio value
   useEffect(() => {
     async function fetchMarketData() {
@@ -20,12 +21,14 @@ function UserDashboard() {
         // Market Overview data
         const marketResponse = await fetch("/api/dashboard/marketOverview")
         if (!marketResponse.ok) throw new Error("Failed to fetch market overview data.")
+        
         const marketData = await marketResponse.json()
-        setMarketOverview(marketData)
+        setMarketOverview(marketData.marketOverview || []) // Access the array directly
 
         // Portfolio Value data
         const portfolioResponse = await fetch("/api/dashboard/totalPortfolioValue")
         if (!portfolioResponse.ok) throw new Error("Failed to fetch portfolio value data.")
+        
         const portfolioData = await portfolioResponse.json()
         setPortfolioValue(portfolioData.value)
       } catch (error) {
@@ -39,22 +42,21 @@ function UserDashboard() {
   // Fetch top news articles
   useEffect(() => {
     async function fetchNews() {
-        try {
-            const response = await fetch("/api/dashboard/getNews") // Fetch from the backend
-            if (!response.ok) throw new Error("Failed to fetch news data.")
-            
-            const data = await response.json();
-            console.log('News data from API:', data);  // Log the fetched data
+      try {
+        const response = await fetch("/api/dashboard/getNews")
+        if (!response.ok) throw new Error("Failed to fetch news data.")
+        
+        const data = await response.json()
+        console.log('News data from API:', data)
 
-            setNewsArticles(data.articles || []); // Adjust according to the actual data structure
-        } catch (error) {
-            console.error("Error fetching news:", error);
-        }
+        setNewsArticles(data.newsSnippets || [])
+      } catch (error) {
+        console.error("Error fetching news:", error)
+      }
     }
 
     fetchNews()
-}, [])
-
+  }, [])
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-b from-[#001f3f] to-black text-white">
@@ -71,9 +73,17 @@ function UserDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-white">
-                {marketOverview ? marketOverview.summary : "Loading market overview..."}
-              </p>
+              {marketOverview.length === 0 ? (
+                <p className="text-white">Loading market overview...</p>
+              ) : (
+                marketOverview.map((item, index) => (
+                  <div key={index} className="mb-2">
+                    <p className="text-white font-semibold">
+                      {item.symbol}: ${item.price} ({item.change}%)
+                    </p>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
 
@@ -87,7 +97,7 @@ function UserDashboard() {
             </CardHeader>
             <CardContent>
               <p className="text-white">
-                {portfolioValue ? `$${portfolioValue.toFixed(2)}` : "Loading portfolio value..."}
+                {portfolioValue !== null ? `$${portfolioValue.toFixed(2)}` : "Loading portfolio value..."}
               </p>
             </CardContent>
           </Card>
@@ -109,11 +119,12 @@ function UserDashboard() {
                     <h3 className="text-lg font-semibold text-white">{article.title}</h3>
                     <div className="flex items-center mt-1 text-sm text-gray-400">
                       <NewspaperIcon className="h-4 w-4 mr-2" />
-                      <span>{article.source}</span>
-                      <span className="mx-2">•</span>
-                      <span>{article.time}</span>
+                      <span>{new URL(article.url).hostname}</span>
                     </div>
-                    <p className="text-gray-300">{article.summary || "No summary available."}</p>
+                    <p className="text-gray-300">{article.description || "No description available."}</p>
+                    <a href={article.url} target="_blank" rel="noopener noreferrer" className="text-[#4ac1ff] hover:underline mt-2 inline-block">
+                      Read more
+                    </a>
                   </div>
                 ))
               )}
@@ -125,4 +136,4 @@ function UserDashboard() {
   )
 }
 
-export default withAuth(UserDashboard);
+export default withAuth(UserDashboard)

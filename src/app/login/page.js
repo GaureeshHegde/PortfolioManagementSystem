@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { EyeIcon, EyeOffIcon } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const [isCreatingAccount, setIsCreatingAccount] = useState(false)
@@ -15,11 +16,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const router = useRouter()
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
   const showAlert = (message) => {
-    console.log("Alert: ", message) // Log the message shown in alerts
+    console.log("Alert: ", message)
     alert(message)
   }
 
@@ -29,7 +31,7 @@ export default function LoginPage() {
     console.log("Form Submitted with values:", { email, username, password, confrmPassword })
 
     if (isCreatingAccount) {
-      console.log("Creating account...") // Log the account creation flow
+      console.log("Creating account...")
       if (password === "" || confrmPassword === "" || email === "" || username === "") {
         showAlert("Please fill in all fields")
         setLoading(false)
@@ -44,7 +46,7 @@ export default function LoginPage() {
         return
       } else {
         try {
-          console.log("Sending sign up request...") // Log the API request
+          console.log("Sending sign up request...")
           const res = await fetch("/api/signup", {
             method: "POST",
             headers: {
@@ -54,20 +56,20 @@ export default function LoginPage() {
           })
 
           if (!res.ok) {
-            console.log("Signup failed", res) // Log failure response
+            console.log("Signup failed", res)
             showAlert("Failed to create account")
           } else {
-            console.log("Signup successful", res) // Log success response
+            console.log("Signup successful", res)
             showAlert("Account created successfully!")
           }
         } catch (error) {
-          console.error("Error during signup:", error) // Log any error caught
+          console.error("Error during signup:", error)
           showAlert("An error occurred")
         }
         setLoading(false)
       }
     } else {
-      console.log("Logging in...") // Log the login flow
+      console.log("Logging in...")
       if (email === "" || password === "") {
         showAlert("Please fill in all fields")
         setLoading(false)
@@ -75,7 +77,7 @@ export default function LoginPage() {
       }
 
       try {
-        console.log("Sending login request...") // Log the API request
+        console.log("Sending login request...")
         const res = await fetch("/api/authenticate", {
           method: "POST",
           headers: {
@@ -85,19 +87,25 @@ export default function LoginPage() {
         })
 
         const data = await res.json()
-        console.log("Login response:", data) // Log the API response
+        console.log("Login response:", data)
 
         if (res.ok && data?.token) {
-          console.log("Login successful, token:", data.token) // Log success
+          console.log("Login successful, token:", data.token)
           localStorage.setItem("token", data.token)
           showAlert("Login successful!")
-          window.location.href = "/dashboard"
+          
+          // Check if the email is "gaureesh.hegde@gmail.com" and redirect to admin
+          if (email === "gaureesh.hegde@gmail.com") {
+            router.push("/admin")
+          } else {
+            router.push("/dashboard")
+          }
         } else {
-          console.error("Login failed", data) // Log any failure response
+          console.error("Login failed", data)
           showAlert(data.message || "Login failed. Please try again.")
         }
       } catch (error) {
-        console.error("Error during login:", error) // Log any error caught
+        console.error("Error during login:", error)
         showAlert("An error occurred. Please try again later.")
       }
 

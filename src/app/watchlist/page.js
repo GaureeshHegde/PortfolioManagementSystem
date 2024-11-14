@@ -102,6 +102,7 @@ const WatchlistPage = () => {
 
       if (response.ok) {
         const watchlistData = await response.json()
+        console.log(watchlistData)
         setWatchlist(watchlistData.data)
       } else {
         const error = await response.json()

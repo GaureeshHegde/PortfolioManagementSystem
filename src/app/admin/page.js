@@ -1,7 +1,6 @@
-'use client'
+"use client"
 
-'use client'
-
+import AdminWrapper from '../components/adminWrapper'
 import { useState } from 'react'
 import Link from 'next/link'
 import { BarChart2Icon, 
@@ -35,6 +34,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard')
 
   return (
+  
     <div className="flex h-screen bg-gradient-to-b from-[#001f3f] to-black text-white">
       {/* Sidebar */}
       <aside className="w-64 bg-[#0a2a4d] p-6">
@@ -168,5 +168,6 @@ export default function AdminDashboard() {
         </div>
       </main>
     </div>
+
   )
 }

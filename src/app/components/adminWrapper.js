@@ -1,13 +1,14 @@
 // AdminWrapper.js
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation'; // Make sure to use this import for page-based routing
 import { useEffect, useState } from 'react';
 import jwt from 'jsonwebtoken';
 
 const AdminWrapper = ({ children }) => {
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Track loading state
+  const [isAuthorized, setIsAuthorized] = useState(false); // Track if the user is authorized
   const router = useRouter();
-  const secretKey = process.env.JWT_SECRET; // replace with your JWT secret
-  const allowedUsername = 'your_username'; // replace with the username you want to check
+  const secretKey = process.env.JWT_SECRET; // Ensure this is set in your environment variables
+  const allowedUsername = 'Gaureesh'; // Set your allowed username here
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -15,21 +16,27 @@ const AdminWrapper = ({ children }) => {
       try {
         const decoded = jwt.verify(token, secretKey);
         if (decoded.username === allowedUsername) {
-          setIsAuthorized(true);
+          setIsAuthorized(true); // User is authorized
         } else {
-          router.replace('/'); // redirect to home if unauthorized
+          router.replace('/holdings'); // Redirect to a different page if not authorized
         }
       } catch (error) {
         console.error('Invalid or expired token:', error);
-        router.replace('/'); // redirect to home if decoding fails
+        router.replace('/'); // Redirect to home if token is invalid or expired
       }
     } else {
-      router.replace('/'); // redirect to home if no token
+      router.replace('/'); // Redirect to home if no token is found
     }
-  }, [router]);
+
+    setIsLoading(false); // Set loading to false after processing
+  }, [router, secretKey]);
+
+  if (isLoading) {
+    return <div>Loading...</div>; // Optionally show a loading state
+  }
 
   if (!isAuthorized) {
-    return null; // optionally, show a loading indicator here
+    return null; // Render nothing if not authorized
   }
 
   return <>{children}</>;
