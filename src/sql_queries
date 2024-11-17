@@ -70,3 +70,35 @@ CREATE TABLE holdings (
 
     PRIMARY KEY (user_id, symbol) -- Composite primary key for uniqueness per user and stock
 );
+
+CREATE OR REPLACE PROCEDURE get_most_bought_sold_stocks(user_id INT)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    most_bought RECORD;
+    most_sold RECORD;
+BEGIN
+    SELECT symbol, SUM(quantity) AS total_bought_quantity
+    INTO most_bought
+    FROM transactions
+    WHERE user_id = user_id AND transaction_type = 'BUY'
+    GROUP BY symbol
+    ORDER BY total_bought_quantity DESC
+    LIMIT 1;
+
+    SELECT symbol, SUM(quantity) AS total_sold_quantity
+    INTO most_sold
+    FROM transactions
+    WHERE user_id = user_id AND transaction_type = 'SELL'
+    GROUP BY symbol
+    ORDER BY total_sold_quantity DESC
+    LIMIT 1;
+
+    RETURN QUERY SELECT
+        most_bought.symbol AS most_bought_stock,
+        most_bought.total_bought_quantity AS most_bought_quantity,
+        most_sold.symbol AS most_sold_stock,
+        most_sold.total_sold_quantity AS most_sold_quantity;
+END;
+$$;
+

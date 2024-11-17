@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-export default function PageNavbar() {
+export default function AdminNavbar() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -40,6 +40,7 @@ export default function PageNavbar() {
           <NavLink href="/orders">Orders</NavLink>
           <NavLink href="/holdings">Holdings</NavLink>
           <NavLink href="/dashboard">Dashboard</NavLink>
+          <NavLink href="/admin">Admin</NavLink>
 
           {isLoggedIn ? (
             <button

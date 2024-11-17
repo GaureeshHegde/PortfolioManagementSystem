@@ -21,7 +21,7 @@ export async function GET(req) {
         
         // Fetch orders for the user from order_history table
         const result = await pool.query(
-            'SELECT symbol, quantity, type AS type, date_of_order AS date_of_order FROM order_history WHERE user_id = $1',
+            'SELECT symbol, quantity, type AS type, date_of_order FROM order_history WHERE user_id = $1',
             [curr.rows[0].user_id]
         );
         
