@@ -107,7 +107,7 @@ function OrdersPage() {
       toast.success(`${values.action === "buy" ? "Bought" : "Sold"} ${values.quantity} shares of ${values.stockSymbol}`);
       form.reset();
     } catch (error) {
-      console.error("Error Executing Trade:", error);
+      // console.error("Error Executing Trade:", error);
       toast.error("There was a problem executing your trade. Please try again.");
     } finally {
       setIsLoading(false);
@@ -218,7 +218,7 @@ function OrdersPage() {
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <div className="text-center p-4">Loading orders...</div>
+                <div className="text-center p-4 text-[#4ac1ff]">Loading orders...</div>
               ) : (
                 <Table>
                   <TableHeader>
@@ -233,10 +233,10 @@ function OrdersPage() {
                     {orders && orders.length > 0 ? (
                       orders.map((order) => (
                         <TableRow key={order.id || `${order.symbol}-${order.date_of_order}`}>
-                          <TableCell>{order.symbol}</TableCell>
-                          <TableCell>{order.quantity}</TableCell>
-                          <TableCell>{order.type || "N/A"}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-[#4ac1ff]">{order.symbol}</TableCell>
+                          <TableCell className="text-[#4ac1ff]">{order.quantity}</TableCell>
+                          <TableCell className="text-[#4ac1ff]">{order.type || "N/A"}</TableCell>
+                          <TableCell className="text-[#4ac1ff]">
                             {order.date_of_order ? 
                               new Date(order.date_of_order).toLocaleString() : 
                               "Invalid Date"}

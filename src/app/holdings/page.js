@@ -125,10 +125,10 @@ function HoldingsPage() {
               <TableBody>
                 {holdings.map((holding) => (
                   <TableRow key={holding.symbol}>
-                    <TableCell className="font-medium">{holding.symbol || "N/A"}</TableCell>
-                    <TableCell>{holding.name || "N/A"}</TableCell>
-                    <TableCell className="text-right">{holding.quantity || 0}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="font-medium text-[#4ac1ff]">{holding.symbol || "N/A"}</TableCell>
+                    <TableCell className="font-medium text-[#4ac1ff]">{holding.name || "N/A"}</TableCell>
+                    <TableCell className="text-right text-[#4ac1ff]">{holding.quantity || 0}</TableCell>
+                    <TableCell className="text-right text-[#4ac1ff]">
                       ${holding.currentPrice ? holding.currentPrice.toFixed(2) : "N/A"}
                     </TableCell>
                     <TableCell className="text-right">
@@ -137,7 +137,7 @@ function HoldingsPage() {
                         {holding.price_change != null ? Math.abs(holding.price_change).toFixed(2) : "0.00"}%
                       </span>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right text-[#4ac1ff]">
                       ${(holding.quantity && holding.currentPrice ? (holding.quantity * holding.currentPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00")}
                     </TableCell>
                   </TableRow>

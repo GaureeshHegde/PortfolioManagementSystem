@@ -230,10 +230,10 @@ const WatchlistPage = () => {
                       onClick={() => StockDetailsDialog(stock.symbol)}
                       className="cursor-pointer hover:bg-[#001f3f]"
                     >
-                      <TableCell className="font-medium">{stock.symbol}</TableCell>
-                      <TableCell>{stock.name}</TableCell>
-                      <TableCell className="text-right">${stock.price.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="font-medium text-[#4ac1ff]">{stock.symbol}</TableCell>
+                      <TableCell className="font-medium text-[#4ac1ff]">{stock.name}</TableCell>
+                      <TableCell className="text-right text-[#4ac1ff]">${stock.price.toFixed(2)}</TableCell>
+                      <TableCell className="text-right text-[#4ac1ff]">
                         <span className={stock.change >= 0 ? "text-green-400" : "text-red-400"}>
                           {stock.change >= 0 ? (
                             <ArrowUpIcon className="inline h-4 w-4" />
@@ -290,10 +290,10 @@ const WatchlistPage = () => {
                       onClick={() => StockDetailsDialog(stock.symbol)}
                       className="cursor-pointer hover:bg-[#001f3f]"
                     >
-                      <TableCell className="font-medium">{stock.symbol}</TableCell>
-                      <TableCell>{stock.name}</TableCell>
-                      <TableCell className="text-right">${stock.price?.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="font-medium text-[#4ac1ff]">{stock.symbol}</TableCell>
+                      <TableCell className="font-medium text-[#4ac1ff]">{stock.name}</TableCell>
+                      <TableCell className="text-right text-[#4ac1ff]">${stock.price?.toFixed(2)}</TableCell>
+                      <TableCell className="text-right text-[#4ac1ff]">
                         <span className={stock.change >= 0 ? "text-green-400" : "text-red-400"}>
                           {stock.change >= 0 ? (
                             <ArrowUpIcon className="inline h-4 w-4" />

@@ -128,9 +128,6 @@ function UserDashboard() {
                 </div>
               </CardHeader>
               <CardContent className="text-center">
-                <p className="text-2xl font-bold mb-4">
-                  {portfolioValue ? `$${portfolioValue.toLocaleString()}` : 'Loading...'}
-                </p>
                 <p className="text-gray-400 mb-6">
                   Track your portfolio performance and manage your holdings in one place.
                 </p>
